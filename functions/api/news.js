@@ -1,5 +1,5 @@
 // 약품 공급 뉴스 API (공식 데이터만)
-// GET /api/news         - 캐시된 데이터 반환 (6시간)
+// GET /api/news         - 캐시된 데이터 반환 (1시간)
 // GET /api/news?debug=1 - 각 API 원본 응답 반환 (디버그)
 // POST /api/news        - 수동 새로고침 (관리자)
 //
@@ -11,7 +11,7 @@
 //   [폴백] 회수 HTML   - nedrug.mfds.go.kr HTML            (API 실패 시)
 
 const CACHE_KEY = 'pharmacy-news';
-const CACHE_TTL = 6 * 60 * 60;
+const CACHE_TTL = 1 * 60 * 60; // 1시간으로 단축 (기존 6시간)
 
 // ── 유틸 ───────────────────────────────────────────────────────
 function fmtDate(s) {
@@ -276,15 +276,18 @@ function parseSupplyStopMfds(rows) {
 async function fetchDrugPriceChanges(apiKey, kv) {
   const items = [];
 
-  // 현재 약가 데이터 가져오기 (최대 5페이지 × 100건 = 500건, 타임아웃 방지)
+  // 현재 약가 데이터 가져오기 (5페이지 병렬 × 100건 = 500건)
   let currentPrices = {};
   try {
-    for (let page = 1; page <= 5; page++) {
-      const url = 'https://apis.data.go.kr/B551182/dgamtCrtrInfoService1.2/getDgamtList'
-        + '?serviceKey=' + apiKey + '&numOfRows=100&pageNo=' + page;
-      const rows = await callApi(url);
-      if (rows.length === 0) break;
+    const pageUrls = Array.from({ length: 5 }, (_, i) =>
+      'https://apis.data.go.kr/B551182/dgamtCrtrInfoService1.2/getDgamtList'
+      + '?serviceKey=' + apiKey + '&numOfRows=100&pageNo=' + (i + 1)
+    );
+    const pageResults = await Promise.allSettled(pageUrls.map(url => callApi(url)));
 
+    for (const result of pageResults) {
+      if (result.status !== 'fulfilled') continue;
+      const rows = result.value;
       for (const row of rows) {
         const isXml = typeof row === 'string';
         const g = isXml
@@ -493,13 +496,28 @@ export async function onRequestGet(context) {
     const cached = await env.NEWS_CACHE.get(CACHE_KEY, { type: 'json' });
     if (cached) {
       const age = (Date.now() - new Date(cached.crawledAt).getTime()) / 1000;
-      if (age < CACHE_TTL) return Response.json({ ...cached, fromCache: true });
+      if (age < CACHE_TTL) {
+        // Cache-Control 헤더 추가로 브라우저 캐싱 방지
+        return Response.json({ ...cached, fromCache: true }, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+      }
     }
     const apiKey = env.DATA_GO_KR_API_KEY || '';
     if (!apiKey) return Response.json({ items: [], error: 'API 키 미설정', fromCache: false });
     const news = await crawlNews(apiKey, env.NEWS_CACHE);
     await env.NEWS_CACHE.put(CACHE_KEY, JSON.stringify(news), { expirationTtl: CACHE_TTL });
-    return Response.json({ ...news, fromCache: false });
+    return Response.json({ ...news, fromCache: false }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (e) {
     const cached = await env.NEWS_CACHE.get(CACHE_KEY, { type: 'json' });
     if (cached) return Response.json({ ...cached, fromCache: true, error: e.message });
@@ -508,17 +526,7 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
-  const { env, request } = context;
-  const token = request.headers.get('X-Admin-Token');
-  if (!token) return Response.json({ error: '인증 필요' }, { status: 401 });
-  const [type, hash] = token.split(':');
-  if (!type || !hash) return Response.json({ error: '잘못된 토큰' }, { status: 401 });
-  const admin = await env.DB.prepare(
-    'SELECT password_hash FROM admin_config WHERE id = ?'
-  ).bind(type).first();
-  if (!admin || admin.password_hash !== hash) {
-    return Response.json({ error: '인증 실패' }, { status: 401 });
-  }
+  const { env } = context;
   try {
     const apiKey = env.DATA_GO_KR_API_KEY || '';
     if (!apiKey) return Response.json({ error: 'API 키 미설정' }, { status: 500 });

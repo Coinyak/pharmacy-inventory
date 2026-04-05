@@ -253,11 +253,6 @@ td.stock-highlight { background:#fefce8; font-weight:700; }
 .login-error { color:#ef4444; font-size:12px; margin-bottom:8px; display:none; }
 .login-info { color:#2563eb; font-size:12px; margin-bottom:8px; display:none; }
 
-/* 읽기 전용 모드: 수정 관련 요소 숨김 */
-body.viewer-mode .upload-zone,
-body.viewer-mode .upload-status,
-body.viewer-mode .admin-only { display:none !important; }
-body.viewer-mode .viewer-badge { display:inline-block !important; }
 body.general-mode .chemo-only { display:none !important; }
 /* 일반약 모드 - 초록 테마 */
 body.general-mode { --primary:#16a34a; --primary-dark:#15803d; --accent:#22c55e; }
@@ -274,7 +269,7 @@ body.general-mode .zcal th { background:#15803d; }
 body.general-mode .zcal th.wkend { background:#14532d; }
 body.general-mode .alert-blue { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
 body.general-mode .text-blue { color:#16a34a; }
-.viewer-badge { display:none; background:#f59e0b; color:#fff; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; margin-left:8px; }
+.viewer-badge { display:none; }
 
 /* 온라인 모드 표시 */
 .mode-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; margin-left:8px; }
@@ -288,35 +283,20 @@ body.general-mode .text-blue { color:#16a34a; }
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <h2>재고관리 시스템</h2>
-    <p class="subtitle">역할을 선택하세요</p>
-    <button class="role-btn" onclick="selectRole('chemo', this)">
-      관리자 (항암제)
+    <p class="subtitle">관리할 데이터를 선택하세요</p>
+    <button class="role-btn" onclick="enterDirect('chemo')">
+      항암제 관리
       <div class="desc">항암제 재고 데이터 업로드 및 관리</div>
     </button>
-    <button class="role-btn" onclick="selectRole('general', this)">
-      관리자 (일반약)
+    <button class="role-btn" onclick="enterDirect('general')">
+      일반약 관리
       <div class="desc">일반약 재고 데이터 업로드 및 관리</div>
     </button>
-    <button class="role-btn" onclick="selectRole('viewer', this)">
-      조회 전용
-      <div class="desc">데이터 열람만 가능 (수정 불가)</div>
-    </button>
-    <div class="login-pw" id="loginPw">
-      <div class="login-info" id="loginInfo">최초 접속: 새 비밀번호를 설정합니다.</div>
-      <div class="login-error" id="loginError"></div>
-      <input type="password" id="loginPassword" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="login-submit" onclick="doLogin()">로그인</button>
-    </div>
-    <div class="login-pw" id="viewerSelect" style="display:none;">
-      <p style="font-size:13px;color:#475569;margin-bottom:10px;">조회할 데이터를 선택하세요:</p>
-      <button class="role-btn" onclick="enterViewer('chemo')" style="margin-bottom:6px;">항암제 데이터</button>
-      <button class="role-btn" onclick="enterViewer('general')">일반약 데이터</button>
-    </div>
   </div>
 </div>
 
 <div class="header">
-  <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> 재고관리 시스템<span class="viewer-badge">조회 전용</span><span class="mode-badge" id="modeBadge"></span></h1>
+  <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> 재고관리 시스템<span class="mode-badge" id="modeBadge"></span></h1>
   <div class="flex gap-8" style="align-items:center;">
     <input type="date" id="workDate" onchange="onWorkDateChange()" style="padding:5px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;font-size:13px;">
     <button class="btn" onclick="loadDateView()" style="background:rgba(255,255,255,.2);color:#fff;padding:5px 14px;">조회</button>
@@ -622,7 +602,7 @@ body.general-mode .text-blue { color:#16a34a; }
       <h3 style="margin-bottom:0;border-bottom:none;padding-bottom:0;">약품 공급 뉴스</h3>
       <div class="flex gap-8" style="align-items:center;">
         <span id="newsCrawledAt" style="font-size:11px;color:#94a3b8;"></span>
-        <button class="btn btn-secondary btn-sm admin-only" onclick="refreshNews()">새로고침</button>
+        <button class="btn btn-secondary btn-sm" onclick="refreshNews()">새로고침</button>
       </div>
     </div>
     <div class="news-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
@@ -851,7 +831,7 @@ const ANTICANCER_CODES = new Set(['6MP5W','ASCIMIN4','X5FU1','XADM10W','XADM20B'
 // ============================================================
 // 온라인 모드 (Cloudflare D1 연동)
 // ============================================================
-let appMode = 'offline';   // 'offline' | 'admin' | 'viewer'
+let appMode = 'offline';   // 'offline' | 'admin'
 let appDataType = '';       // 'chemo' | 'general'
 let authToken = '';         // 관리자 인증 토큰
 const API_BASE = '/api';
@@ -864,75 +844,29 @@ async function sha256(text) {
 
 // 로그인 UI 제어
 let selectedRole = '';
-function selectRole(role, btn) {
-  selectedRole = role;
-  document.querySelectorAll('.login-box .role-btn').forEach(b => b.classList.remove('selected'));
-  if (btn) btn.classList.add('selected');
-  document.getElementById('loginPw').style.display = 'none';
-  document.getElementById('viewerSelect').style.display = 'none';
-  document.getElementById('loginError').style.display = 'none';
-  document.getElementById('loginInfo').style.display = 'none';
-  if (role === 'viewer') {
-    document.getElementById('viewerSelect').style.display = 'block';
-  } else {
-    document.getElementById('loginPw').style.display = 'block';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('loginPassword').focus();
-  }
-}
 
-async function doLogin() {
-  const pw = document.getElementById('loginPassword').value.trim();
-  if (!pw) { showLoginError('비밀번호를 입력하세요.'); return; }
-  try {
-    const res = await fetch(API_BASE + '/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: selectedRole, password: pw }),
-    });
-    const data = await res.json();
-    if (!res.ok) { showLoginError(data.error || '로그인 실패'); return; }
-    if (data.isNew) {
-      document.getElementById('loginInfo').textContent = '비밀번호가 설정되었습니다!';
-      document.getElementById('loginInfo').style.display = 'block';
-    }
-    authToken = data.token;
-    appMode = 'admin';
-    appDataType = selectedRole;
-    sessionStorage.setItem('authToken', authToken);
-    sessionStorage.setItem('appMode', appMode);
-    sessionStorage.setItem('appDataType', appDataType);
-    await enterApp();
-  } catch (e) {
-    console.error('로그인 실패:', e);
-    showLoginError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.');
-  }
-}
-
-async function enterViewer(type) {
-  appMode = 'viewer';
+async function enterDirect(type) {
+  appMode = 'admin';
   appDataType = type;
-  authToken = '';
+  authToken = type; // 인증 없이 타입을 토큰으로 사용
   sessionStorage.setItem('appMode', appMode);
   sessionStorage.setItem('appDataType', appDataType);
-  sessionStorage.removeItem('authToken');
+  sessionStorage.setItem('authToken', authToken);
   await enterApp();
 }
 
+
 async function enterApp() {
   resetAllState();
+  // 이전 모드 클래스 잔상 제거
+  document.body.classList.remove('viewer-mode');
+  document.body.classList.remove('general-mode');
   document.getElementById('loginOverlay').style.display = 'none';
   // 모드 표시
   const badge = document.getElementById('modeBadge');
-  if (appMode === 'admin') {
-    badge.textContent = appDataType === 'chemo' ? '항암제 관리자' : '일반약 관리자';
-    badge.className = 'mode-badge online';
-    updateSyncBadge('fail', '아직 동기화되지 않음');
-  } else if (appMode === 'viewer') {
-    badge.textContent = appDataType === 'chemo' ? '항암제 조회' : '일반약 조회';
-    badge.className = 'mode-badge online';
-    document.body.classList.add('viewer-mode');
-  }
+  badge.textContent = appDataType === 'chemo' ? '항암제' : '일반약';
+  badge.className = 'mode-badge online';
+  updateSyncBadge('fail', '아직 동기화되지 않음');
   // 일반약 모드: 입원MIX/외래 관련 UI 숨김, 탭 제목 변경
   if (appDataType === 'general') {
     document.body.classList.add('general-mode');
@@ -943,6 +877,10 @@ async function enterApp() {
   }
   // D1에서 데이터 로드
   await loadFromD1();
+  // 항암제 모드에서 마스터 목록이 비어 있으면 내장 목록으로 초기화
+  if (appDataType === 'chemo' && state.drugMaster.length === 0) {
+    state.drugMaster = BUILTIN_DRUGS.map(d => ({ code: d.code, name: d.name }));
+  }
   init();
 }
 
@@ -1308,10 +1246,11 @@ function restoreSession() {
   const savedMode = sessionStorage.getItem('appMode');
   const savedType = sessionStorage.getItem('appDataType');
   const savedToken = sessionStorage.getItem('authToken');
-  if (savedMode && savedType) {
+  // viewer 모드는 더 이상 지원하지 않음 - admin만 허용
+  if (savedMode === 'admin' && savedType && ['chemo', 'general'].includes(savedType)) {
     appMode = savedMode;
     appDataType = savedType;
-    authToken = savedToken || '';
+    authToken = savedToken || savedType;
     return true;
   }
   return false;
@@ -1322,9 +1261,19 @@ function logout() {
   appMode = 'offline';
   appDataType = '';
   authToken = '';
+  selectedRole = '';
   resetAllState();
   document.body.classList.remove('viewer-mode');
   document.body.classList.remove('general-mode');
+
+  // 탭 대시보드로 리셋
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  var dashTab = document.getElementById('tab-dashboard');
+  if (dashTab) dashTab.classList.add('active');
+  var navBtns = document.querySelectorAll('.nav button');
+  if (navBtns[0]) navBtns[0].classList.add('active');
+
   var syncBadge = document.getElementById('d1SyncBadge');
   if (syncBadge) syncBadge.style.display = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
@@ -1401,7 +1350,6 @@ function resetAllState() {
 }
 
 function saveState() {
-  if (appMode === 'viewer') return; // 읽기 전용은 저장 불가
   saveToD1();
 }
 
@@ -1581,9 +1529,12 @@ function saveToDailyData(date, fileNum) {
   const dd = state.dailyData[date];
   if (fileNum === 1) {
     dd.inventory = JSON.parse(JSON.stringify(state.inventory));
-    dd.inventoryFileType = state.inventoryFileType; // 파일 유형도 저장
+    dd.inventoryFileType = state.inventoryFileType;
   }
-  // fileNum === 2 (사용량)은 저장하지 않음 → 당일만 메모리에 유지
+  // fileNum === 2 (사용량): dailyData에 저장 (날짜별 사용량 이력 유지)
+  if (fileNum === 2) {
+    dd.dailyUsage = state.dailyUsage.map(u => ({ code: u.code, name: u.name, total: u.total, unit: u.unit }));
+  }
   if (fileNum === 3) dd.inpatientMix = JSON.parse(JSON.stringify(state.inpatientMix));
   if (fileNum === 4) dd.outpatientData = JSON.parse(JSON.stringify(state.outpatientData));
   if (!dd.uploadDates) dd.uploadDates = {};
@@ -1613,10 +1564,9 @@ function loadDateView() {
     state.inventory = JSON.parse(JSON.stringify(state.dailyData[invDate].inventory));
   }
 
-  // 사용량은 당일만 유효 → 과거 조회 시 빈 배열
-  state.dailyUsage = [];
+  // 사용량: 해당 날짜 dailyData에 저장된 것 복원 (없으면 빈 배열)
+  state.dailyUsage = dd?.dailyUsage ? JSON.parse(JSON.stringify(dd.dailyUsage)) : [];
   // 입원MIX/외래: 해당 날짜만
-  const dd = state.dailyData[date];
   state.inpatientMix = dd?.inpatientMix ? JSON.parse(JSON.stringify(dd.inpatientMix)) : [];
   state.outpatientData = dd?.outpatientData ? JSON.parse(JSON.stringify(dd.outpatientData)) : [];
   // 파일 유형 복원
@@ -1625,7 +1575,7 @@ function loadDateView() {
   // 업로드 상태 갱신
   state.uploadDates = {
     f1: invDate || '',
-    f2: '', // 사용량은 저장되지 않으므로 항상 빈값
+    f2: dd?.uploadDates?.f2 || '', // 사용량도 이제 저장됨
     f3: dd?.uploadDates?.f3 || '',
     f4: dd?.uploadDates?.f4 || ''
   };
@@ -1730,7 +1680,17 @@ function parseInventory(wb) {
       price: parseFloat(String(r['단가'] || '0').replace(/,/g,'')) || 0,
       total: parseFloat(String(r['총금액'] || '0').replace(/,/g,'')) || 0
     };
-  }).filter(function(r) { return r.code || r.name; });
+  }).filter(function(r) {
+    // 물품코드가 없으면 제외
+    if (!r.code || !r.name) return false;
+    
+    // 물품코드가 숫자로만 구성된 경우만 허용 (예: 123456)
+    // 또는 대표물품코드가 있는 경우 (대표물품코드 우선 사용)
+    var isNumericCode = /^\d+$/.test(r.code);
+    
+    // 물품코드가 숫자가 아니면 제외 (예: CAMTOBEL 같은 문자 코드 제외)
+    return isNumericCode;
+  });
   console.log('[1.xlsx] 파싱완료:', state.inventory.length, '품목, qty>0:', state.inventory.filter(function(r){return r.qty>0;}).length);
   if (state.inventoryFileType === '특수조제') {
     toast('특수조제 파일 감지 - 항암제 목록만 표시됩니다', 'info');
@@ -2315,9 +2275,6 @@ function renderDashboard() {
 
   // 알림 (부족 알림 제외 — 제로관리약 + 초기설정 안내만 표시)
   let alertHtml = '';
-  if (state.drugMaster.length === 0) {
-    alertHtml += '<div class="alert-box alert-blue">PHS 항암 엑셀 파일을 업로드하여 항암제 마스터 목록을 초기화하세요.</div>';
-  }
   // 실재고 맵
   const invMap = {};
   try { getRealInventory().forEach(r => { invMap[r.code] = r.realQty; }); } catch(e) {}
@@ -2362,18 +2319,16 @@ function renderInventory() {
       const surplusStr = surplusVal > 0 ? '+'+surplusVal : surplusVal < 0 ? ''+surplusVal : '0';
       const surplusCls = surplusVal > 0 ? 'text-green' : surplusVal < 0 ? 'text-red' : '';
       const isCold = coldSet.has(r.code);
-      const surplusCell = appMode !== 'viewer'
-        ? `<td class="num ${surplusCls} surplus-cell" data-code="${r.code}" onclick="startSurplusEdit(this,'${r.code}')" title="클릭하여 잉여 수정" style="cursor:pointer;">${surplusStr}</td>`
-        : `<td class="num ${surplusCls}">${surplusStr}</td>`;
+      const surplusCell = `<td class="num ${surplusCls} surplus-cell" data-code="${r.code}" onclick="startSurplusEdit(this,'${r.code}')" title="클릭하여 잉여 수정" style="cursor:pointer;">${surplusStr}</td>`;
       return `<tr>
       <td>${r.code}</td><td>${r.name}</td><td>${r.spec}</td>
       <td class="num">${r.systemQty}</td>
       <td class="num font-bold ${r.realQty <= 0 ? 'text-red' : 'text-blue'}">${r.realQty}</td>
       ${surplusCell}
       <td class="num font-bold" style="color:#dc2626;">${r.usage > 0 ? r.usage : '-'}</td>
-      <td class="text-center">${appMode !== 'viewer' ? '<button class="cold-toggle ' + (isCold?'active':'') + '" onclick="toggleColdStorage(\'' + r.code + '\')">' + (isCold?'냉장':'실온') + '</button>' : (isCold?'냉장':'실온')}</td>
+      <td class="text-center"><button class="cold-toggle ${isCold?'active':''}" onclick="toggleColdStorage('${r.code}')">${isCold?'냉장':'실온'}</button></td>
       <td class="num">${formatNum(r.price)}</td>
-      <td class="text-center">${appMode !== 'viewer' ? '<button class="btn btn-secondary btn-sm" onclick="hideDrug(\'' + r.code + '\')" title="숨기기" style="padding:2px 6px;font-size:11px;">숨김</button>' : ''}</td>
+      <td class="text-center"><button class="btn btn-secondary btn-sm" onclick="hideDrug('${r.code}')" title="숨기기" style="padding:2px 6px;font-size:11px;">숨김</button></td>
     </tr>`;
     }).join('');
     document.getElementById('invSummary').textContent = `총 ${inv.length}개 품목 | 실재고 0인 품목: ${inv.filter(r=>r.realQty===0).length}개 | 냉장약: ${inv.filter(r=>coldSet.has(r.code)).length}개 | 숨긴 품목: ${hiddenInv.length}개`;
@@ -2388,7 +2343,7 @@ function renderInventory() {
     hiddenCard.style.display = 'block';
     hiddenBody.innerHTML = hiddenInv.map(r => `<tr>
       <td>${r.code}</td><td>${r.name}</td><td class="num">${r.realQty}</td>
-      <td class="text-center">${appMode !== 'viewer' ? '<button class="btn btn-success btn-sm" onclick="unhideDrug(\'' + r.code + '\')" style="padding:2px 8px;font-size:11px;">복원</button>' : ''}</td>
+      <td class="text-center"><button class="btn btn-success btn-sm" onclick="unhideDrug('${r.code}')" style="padding:2px 8px;font-size:11px;">복원</button></td>
     </tr>`).join('');
   }
   // 컬럼 리사이즈 초기화
@@ -2396,7 +2351,6 @@ function renderInventory() {
 }
 
 function startSurplusEdit(td, code) {
-  if (appMode === 'viewer') return;
   const currentVal = (state.surplusFixed || {})[code] !== undefined ? (state.surplusFixed || {})[code] : 0;
   const input = document.createElement('input');
   input.type = 'number';
@@ -3111,7 +3065,7 @@ function renderMasterList() {
     return `<tr>
     <td>${d.code}</td><td>${d.name}</td><td>${d.spec || ''}</td><td>${d.unit || ''}</td>
     <td>${typeBadge}</td>
-    <td>${appMode !== 'viewer' ? '<button class="btn btn-danger btn-sm" onclick="removeMasterDrug(\'' + d.code + '\',\'' + d._type + '\')">삭제</button>' : ''}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="removeMasterDrug('${d.code}','${d._type}')">삭제</button></td>
   </tr>`;
   }).join('');
   const chemoCount = state.drugMaster.length;
@@ -3255,6 +3209,54 @@ function uploadFormulary(input) {
 }
 
 // ── 뉴스 원내 약품 매칭 ───────────────────────────────────────
+// 한글-영문 약품명 매핑 사전 (일반적인 약품명)
+const DRUG_NAME_MAP = {
+  // 항암제 — 성분명(INN)
+  '시스플라틴': 'cisplatin', '카보플라틴': 'carboplatin', '옥살리플라틴': 'oxaliplatin',
+  '파클리탁셀': 'paclitaxel', '도세탁셀': 'docetaxel', '젬시타빈': 'gemcitabine',
+  '트라스투주맙': 'trastuzumab', '베바시주맙': 'bevacizumab',
+  '세툭시맙': 'cetuximab', '리툭시맙': 'rituximab', '이리노테칸': 'irinotecan', '토포테칸': 'topotecan',
+  '에토포시드': 'etoposide', '빈크리스틴': 'vincristine', '빈블라스틴': 'vinblastine',
+  '독소루비신': 'doxorubicin', '에피루비신': 'epirubicin', '플루오로우라실': 'fluorouracil',
+  '카페시타빈': 'capecitabine', '메토트렉세이트': 'methotrexate', '사이클로포스파마이드': 'cyclophosphamide',
+  '이포스파마이드': 'ifosfamide', '템시롤리무스': 'temsirolimus', '에베롤리무스': 'everolimus',
+  '수니티닙': 'sunitinib', '소라페닙': 'sorafenib', '레날리도마이드': 'lenalidomide',
+  '보르테조밉': 'bortezomib', '펨브롤리주맙': 'pembrolizumab', '니볼루맙': 'nivolumab', '아테졸리주맙': 'atezolizumab',
+  '더발루맙': 'durvalumab', '이필리무맙': 'ipilimumab', '라무시루맙': 'ramucirumab',
+  '오비누투주맙': 'obinutuzumab', '카르필조밉': 'carfilzomib', '브렌툭시맙': 'brentuximab',
+  '사시투주맙': 'sacituzumab', '블리나투모맙': 'blinatumomab', '다라투무맙': 'daratumumab',
+  '트라스투주맙엠탄신': 'kadcyla', '트라스투주맙데룩스테칸': 'enhertu',
+  '아자시티딘': 'azacitidine', '데시타빈': 'decitabine', '플루다라빈': 'fludarabine',
+  '카무스틴': 'carmustine', '벤다무스틴': 'bendamustine', '비노렐빈': 'vinorelbine',
+  '이다루비신': 'idarubicin', '다우노루비신': 'daunorubicin', '에리불린': 'eribulin',
+  '카바지탁셀': 'cabazitaxel', '실툭시맙': 'siltuximab',
+  // 항암제 — 브랜드명 (식약처 API가 주로 사용)
+  '아브락산': 'abraxane', '알림타': 'alimta', '아바스틴': 'avastin', '온베브지': 'onbevzy',
+  '벤코드': 'bencord', '블레오마이신': 'bleomycin', '블린사이토': 'blincyto',
+  '칼릭스': 'caelyx', '캄프토': 'campto', '캄토벨': 'camtobell',
+  '사이람자': 'cyramza', '다코젠': 'dacogen', '다잘렉스': 'darzalex', '다우노신': 'daunocin',
+  '디탁셀': 'ditaxel', '독소루빈': 'doxorubin', '엘록사틴': 'eloxatin', '엔독산': 'endoxan',
+  '엔허투': 'enhertu', '얼비툭스': 'erbitux', '플루다라': 'fludara',
+  '가자이바': 'gazyva', '젬자': 'gemzar', '할라벤': 'halaven',
+  '허셉틴': 'herceptin', '허쥬마': 'herzuma', '홀록산': 'holoxan', '하이캄틴': 'hycamtin',
+  '임핀지': 'imfinzi', '제브타나': 'jevtana', '캐사일라': 'kadcyla',
+  '키트루다': 'keytruda', '카이프롤리스': 'kyprolis',
+  '맙테라': 'mabthera', '맙쎄라': 'mabthera',
+  '나벨빈': 'navelbine', '옵디보': 'opdivo', '오니바이드': 'onivyde',
+  '옥살리틴': 'oxalitin', '파덱솔': 'padexol', '퍼제타': 'perjeta', '페스고': 'phesgo',
+  '삼페넷': 'samfenet', '실반트': 'sylvant', '탁솔': 'taxol', '탁소텔': 'taxotere',
+  '티센트릭': 'tecentriq', '토리셀': 'torisel', '트리세녹스': 'trisenox', '트로델비': 'trodelvy',
+  '애드세트리스': 'adcetris', '벨바스틴': 'velbastine', '벨케이드': 'velcade', '비다자': 'vidaza',
+  '여보이': 'yervoy', '잘트랩': 'zaltrap', '젭젤카': 'zepzelca',
+  // 일반약
+  '타이레놀': 'tylenol', '아세트아미노펜': 'acetaminophen', '이부프로펜': 'ibuprofen', '아스피린': 'aspirin',
+  '아목시실린': 'amoxicillin', '세파클러': 'cefaclor', '세프트리악손': 'ceftriaxone',
+  '레보플록사신': 'levofloxacin', '시프로플록사신': 'ciprofloxacin', '오메프라졸': 'omeprazole',
+  '란소프라졸': 'lansoprazole', '라니티딘': 'ranitidine', '메트포르민': 'metformin',
+  '글리메피리드': 'glimepiride', '아토르바스타틴': 'atorvastatin', '로수바스타틴': 'rosuvastatin',
+  '암로디핀': 'amlodipine', '로사르탄': 'losartan', '발사르탄': 'valsartan',
+};
+
 function normalizeDrugName(name) {
   if (!name) return '';
   return name
@@ -3271,11 +3273,12 @@ function extractEngBase(name) {
   var m = name.match(/^([A-Za-z][A-Za-z\-]+)/);
   return m ? m[1].toLowerCase() : '';
 }
-// 한글 기본명 추출: "시스플라틴주사50밀리그램" → "시스플라틴"
+// 한글 기본명 추출: "시스플라틴주사50밀리그램" → "시스플라틴", "허셉틴주" → "허셉틴", "도세탁셀주사액" → "도세탁셀"
 function extractKorBase(name) {
   if (!name) return '';
   var m = name.replace(/\([^)]*\)/g, '').match(/^([가-힣]{2,})/);
-  return m ? m[1].replace(/주사$|정$|캡슐$|시럽$|크림$|연고$|과립$|현탁$|액$|산$/, '') : '';
+  // 접미사 제거: 주사액, 주사, 주, 정, 캡슐, 시럽, 크림, 연고, 과립, 현탁, 액, 산
+  return m ? m[1].replace(/주사액$|주사$|주$|정$|캡슐$|시럽$|크림$|연고$|과립$|현탁$|액$|산$/, '') : '';
 }
 
 // 뉴스 매칭 캐시 (renderNewsPage마다 초기화)
@@ -3290,17 +3293,22 @@ function buildNewsMatchCache() {
     .filter(d => d && d.name)
     .map(d => ({ ...d, _type: d._type || '원내' }));
   // 마스터에 없는 재고 항목만 추가 (중복 방지)
-  const masterNames = new Set(fromMaster.map(d => (d.name||'').toLowerCase()));
-  const inventoryOnly = fromInventory.filter(d => !masterNames.has((d.name||'').toLowerCase()));
+  const masterCodes = new Set(fromMaster.map(d => d.code));
+  const inventoryOnly = fromInventory.filter(d => !masterCodes.has(d.code));
   const allDrugs = [...fromMaster, ...inventoryOnly].filter(d => d && d.name);
+  
   return allDrugs.map(d => ({
     drug: d,
     norm: normalizeDrugName(d.name),
     eng: extractEngBase(d.name),
     kor: extractKorBase(d.name),
+    // 약품명 전체 (한글+영문 모두 포함)
+    fullName: d.name.toLowerCase(),
     ingredient: (d.ingredient || '').toLowerCase(),
     ingKor: (d.ingredient || '').replace(/[a-zA-Z0-9\s.,()\/\-]/g, '').trim(),
     ingEng: (d.ingredient || '').split(/\s+/)[0].toLowerCase(),
+    // EDI 코드 추가 (9자리 숫자)
+    ediCode: d.ediCode || d.code || '',
   }));
 }
 
@@ -3318,54 +3326,110 @@ function getMatchedHospitalDrug(newsItem) {
   const newsKor = extractKorBase(newsProductName);
   const newsLower = (newsItem.title + ' ' + (newsItem.summary || '')).toLowerCase();
 
-  // summary에서 EDI코드 추출
-  const ediMatch = (newsItem.summary || '').match(/EDI코드:\s*(\d{9,})/);
+  // summary에서 EDI코드 추출 (9자리 이상 숫자)
+  const ediMatch = (newsItem.summary || '').match(/EDI코드:\s*(\d{9,})/i);
   const newsEdi = ediMatch ? ediMatch[1] : '';
 
-  // 1단계: EDI코드 매칭
-  if (newsEdi) {
+  // 1단계: EDI코드 매칭 (가장 정확) - 9자리 이상 숫자만
+  if (newsEdi && newsEdi.length >= 9) {
     for (const c of cache) {
-      if (c.drug.ediCode && newsEdi === c.drug.ediCode) return c.drug;
+      const drugEdi = String(c.ediCode || '').trim();
+      // EDI 코드는 정확히 일치해야 함
+      if (drugEdi.length >= 9 && drugEdi === newsEdi) {
+        console.log('[뉴스매칭] EDI 일치:', newsProductName, '→', c.drug.name, '(EDI:', newsEdi, ')');
+        return c.drug;
+      }
     }
   }
 
-  // 2단계: 약품명 정규화 매칭 (최소 4자, 길이 비율 50% 이상)
-  if (newsNorm.length >= 4) {
+  // 2단계: 약품명 정규화 매칭 (최소 5자로 강화, 길이 비율 70% 이상)
+  if (newsNorm.length >= 5) {
     for (const c of cache) {
-      if (!c.norm || c.norm.length < 4) continue;
+      if (!c.norm || c.norm.length < 5) continue;
       const short = newsNorm.length <= c.norm.length ? newsNorm : c.norm;
       const long = newsNorm.length > c.norm.length ? newsNorm : c.norm;
-      if (long.includes(short) && short.length / long.length >= 0.5) return c.drug;
+      // 더 엄격한 매칭: 70% 이상 일치 + 최소 5자 이상
+      if (long.includes(short) && short.length >= 5 && short.length / long.length >= 0.7) {
+        console.log('[뉴스매칭] 정규화 일치:', newsProductName, '→', c.drug.name, '(norm:', short, '/', long, ')');
+        return c.drug;
+      }
     }
   }
 
-  // 3단계: 영문 기본명 매칭 (최소 5자, prefix 매칭)
-  if (newsEng.length >= 5) {
+  // 3단계: 영문 기본명 매칭 (최소 6자로 강화, prefix 매칭, 70% 이상)
+  if (newsEng.length >= 6) {
     for (const c of cache) {
-      if (c.eng.length >= 5) {
+      if (c.eng.length >= 6) {
         const short = newsEng.length <= c.eng.length ? newsEng : c.eng;
         const long = newsEng.length > c.eng.length ? newsEng : c.eng;
-        if (long.startsWith(short) && short.length / long.length >= 0.6) return c.drug;
+        // 더 엄격한 매칭: 70% 이상 일치
+        if (long.startsWith(short) && short.length >= 6 && short.length / long.length >= 0.7) {
+          console.log('[뉴스매칭] 영문 일치:', newsProductName, '→', c.drug.name, '(eng:', short, '/', long, ')');
+          return c.drug;
+        }
       }
     }
   }
 
-  // 4단계: 한글 기본명 매칭 (최소 3자)
-  if (newsKor.length >= 3) {
+  // 4단계: 한글 기본명 매칭 (최소 5자로 강화, 80% 이상)
+  if (newsKor.length >= 5) {
     for (const c of cache) {
-      if (c.kor.length >= 3) {
+      if (c.kor.length >= 5) {
         const short = newsKor.length <= c.kor.length ? newsKor : c.kor;
         const long = newsKor.length > c.kor.length ? newsKor : c.kor;
-        if (long.includes(short) && short.length / long.length >= 0.5) return c.drug;
+        if (long.includes(short) && short.length >= 5 && short.length / long.length >= 0.8) {
+          console.log('[뉴스매칭] 한글 일치:', newsProductName, '→', c.drug.name, '(kor:', short, '/', long, ')');
+          return c.drug;
+        }
       }
     }
   }
 
-  // 5단계: 성분명(ingredient) 매칭 - 뉴스 약품명이 성분명에 직접 포함되는 경우만
+  // 5단계: 한글-영문 교차 매칭 (사전 기반이므로 최소 길이 2자로 완화)
+  if (newsKor.length >= 2) {
+    // 뉴스 한글명을 영문으로 변환하여 매칭
+    const newsKorToEng = DRUG_NAME_MAP[newsKor] || '';
+    for (const c of cache) {
+      // 방법 1: 원내 약품명에 뉴스 한글명이 포함되어 있는지 확인
+      if (c.fullName && c.fullName.includes(newsKor)) {
+        console.log('[뉴스매칭] 한글→전체명 일치:', newsProductName, '→', c.drug.name, '(kor:', newsKor, ')');
+        return c.drug;
+      }
+      // 방법 2: 뉴스 한글명을 영문으로 변환 후 원내 약품명과 비교
+      if (newsKorToEng && c.fullName.includes(newsKorToEng)) {
+        console.log('[뉴스매칭] 한글→영문 매핑:', newsProductName, '→', c.drug.name, '(kor:', newsKor, '→', newsKorToEng, ')');
+        return c.drug;
+      }
+      // 방법 3: 뉴스 한글명을 영문으로 변환 후 정규화된 약품명과 비교
+      if (newsKorToEng && c.norm.includes(newsKorToEng)) {
+        console.log('[뉴스매칭] 한글→영문 매핑(norm):', newsProductName, '→', c.drug.name, '(kor:', newsKor, '→', newsKorToEng, ')');
+        return c.drug;
+      }
+    }
+  }
+  if (newsEng.length >= 6) {
+    for (const c of cache) {
+      // 원내 약품명에 뉴스 영문명이 포함되어 있는지 확인
+      if (c.fullName && c.fullName.includes(newsEng)) {
+        console.log('[뉴스매칭] 영문→전체명 일치:', newsProductName, '→', c.drug.name, '(eng:', newsEng, ')');
+        return c.drug;
+      }
+    }
+  }
+
+  // 6단계: 성분명(ingredient) 매칭 - 최소 길이 강화
   for (const c of cache) {
     if (!c.ingredient) continue;
-    if (c.ingKor.length >= 3 && newsProductName.includes(c.ingKor)) return c.drug;
-    if (c.ingEng.length >= 6 && newsLower.includes(c.ingEng)) return c.drug;
+    // 한글 성분명: 최소 4자 이상
+    if (c.ingKor.length >= 4 && newsProductName.includes(c.ingKor)) {
+      console.log('[뉴스매칭] 성분(한글) 일치:', newsProductName, '→', c.drug.name, '(ing:', c.ingKor, ')');
+      return c.drug;
+    }
+    // 영문 성분명: 최소 8자 이상
+    if (c.ingEng.length >= 8 && newsLower.includes(c.ingEng)) {
+      console.log('[뉴스매칭] 성분(영문) 일치:', newsProductName, '→', c.drug.name, '(ing:', c.ingEng, ')');
+      return c.drug;
+    }
   }
 
   return null;
@@ -3404,6 +3468,12 @@ function addMasterDrug() {
   saveState();
   renderMasterList();
   populateDrugSelects();
+  
+  // 재고현황 탭 업데이트 (추가된 약품이 재고에 있으면 바로 표시)
+  renderInventory();
+  renderUsageSurplus();
+  renderDashboard();
+  
   document.getElementById('newDrugCode').value = '';
   document.getElementById('newDrugName').value = '';
   document.getElementById('newDrugSpec').value = '';
@@ -3418,6 +3488,11 @@ function removeMasterDrug(code, type) {
   }
   saveState();
   renderMasterList();
+  
+  // 재고현황 탭 업데이트 (삭제된 약품이 재고에서 제외됨)
+  renderInventory();
+  renderUsageSurplus();
+  renderDashboard();
 }
 
 function renderHistoryTable() {
@@ -4307,13 +4382,12 @@ function init() {
       if (dd.inventory) state.inventory = JSON.parse(JSON.stringify(dd.inventory));
       if (dd.inpatientMix) state.inpatientMix = JSON.parse(JSON.stringify(dd.inpatientMix));
       if (dd.outpatientData) state.outpatientData = JSON.parse(JSON.stringify(dd.outpatientData));
+      if (dd.dailyUsage) state.dailyUsage = JSON.parse(JSON.stringify(dd.dailyUsage));
       if (dd.inventoryFileType) state.inventoryFileType = dd.inventoryFileType;
-      // 사용량은 항상 빈 배열로 시작 (당일만 유효, 저장되지 않음)
-      state.dailyUsage = [];
       var udates = dd.uploadDates || {};
       state.uploadDates = {
         f1: udates.f1 || '',
-        f2: '', // 사용량은 저장되지 않음
+        f2: udates.f2 || '', // 사용량도 이제 저장됨
         f3: udates.f3 || '',
         f4: udates.f4 || ''
       };
@@ -4354,6 +4428,8 @@ async function loadNews(forceRefresh) {
 
   if (newsLoaded && !forceRefresh) {
     loadingEl.classList.add('hidden');
+    // 매칭 캐시 초기화 (마스터 변경 반영)
+    _newsMatchCache = null;
     applyNewsFilters();
     return;
   }
@@ -4364,10 +4440,17 @@ async function loadNews(forceRefresh) {
   document.getElementById('newsPagination').innerHTML = '';
 
   try {
-    const opts = {};
+    const opts = {
+      // 브라우저 캐시 방지
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    };
     if (forceRefresh) {
       opts.method = 'POST';
-      opts.headers = { 'Content-Type': 'application/json' };
+      opts.headers['Content-Type'] = 'application/json';
       const token = sessionStorage.getItem('authToken');
       if (token) opts.headers['X-Admin-Token'] = token;
     }
@@ -4398,6 +4481,8 @@ async function loadNews(forceRefresh) {
     }
     newsLoaded = true; // 성공 시에만 캐시
 
+    // 매칭 캐시 초기화
+    _newsMatchCache = null;
     newsCurrentPage = 1;
     applyNewsFilters();
   } catch (e) {
@@ -4690,28 +4775,37 @@ function _aiGetFilteredDrugList() {
   }
 }
 
-// 현재 모드에 맞는 뉴스만 필터링 (원내 매칭된 것만)
+// 현재 모드에 맞는 뉴스만 필터링 - newsData에서 직접 읽어서 원내 매칭된 것만 반환
 function _aiGetFilteredNews() {
-  var newsItems = [];
+  if (!newsData || !newsData.items) return [];
+  var result = [];
   try {
-    var newsEls = document.querySelectorAll('.news-item, [data-news-title]');
-    newsEls.forEach(function(el) {
-      var title = el.getAttribute('data-news-title') || el.querySelector('.news-title,.item-title')?.textContent || '';
-      var date = el.getAttribute('data-news-date') || el.querySelector('.news-date,.item-date')?.textContent || '';
-      var matched = el.getAttribute('data-matched-drug') || '';
-      var badge = el.querySelector('.badge-onsite,.badge-inhouse');
-      if (badge || matched) {
-        newsItems.push({ title: title.trim().substring(0, 80), date: date.trim(), matchedDrug: matched || (badge ? badge.textContent.trim() : '') });
+    // 매칭 캐시 초기화
+    if (!_newsMatchCache) _newsMatchCache = buildNewsMatchCache();
+    newsData.items.forEach(function(n) {
+      var matched = null;
+      try { matched = getMatchedHospitalDrug(n); } catch(e) {}
+      if (matched) {
+        result.push({
+          title: (n.title || '').substring(0, 80),
+          date: n.date || '',
+          category: n.categoryLabel || n.category || '',
+          matchedDrug: matched.name || '',
+          matchedCode: matched.code || '',
+          summary: (n.summary || '').substring(0, 100)
+        });
       }
     });
   } catch(e) { /* skip */ }
-  return newsItems.slice(0, 15);
+  return result.slice(0, 20);
 }
 
 function _aiBuildContext() {
   var inv = state.inventory || [];
   var dm = state.drugMaster || [];
   var gdm = state.generalDrugMaster || [];
+  var dailyData = state.dailyData || {};
+  var fu = state.forecastUsage || { from:'', to:'', items:[] };
 
   // 현재 모드에 맞는 재고만 필터링
   var masterCodes = {};
@@ -4721,29 +4815,94 @@ function _aiBuildContext() {
     gdm.forEach(function(d) { masterCodes[(d.code || d.ediCode || '').toUpperCase()] = true; });
   }
 
+  // 날짜별 사용량 데이터 수집 (dailyData에서)
+  var allDates = Object.keys(dailyData).sort();
+  var recentDates = allDates.slice(-14); // 최근 14일
+
+  // 사용량 파일 기반 일평균 계산 (더 정확)
+  var usageMapFromFile = {};
+  var usageDaysCount = 0;
+  recentDates.forEach(function(d) {
+    var du = dailyData[d]?.dailyUsage || [];
+    if (du.length > 0) {
+      usageDaysCount++;
+      du.forEach(function(u) {
+        usageMapFromFile[u.code] = (usageMapFromFile[u.code] || 0) + (u.total || 0);
+      });
+    }
+  });
+  // 일평균으로 변환
+  if (usageDaysCount > 0) {
+    Object.keys(usageMapFromFile).forEach(function(code) {
+      usageMapFromFile[code] = Math.round((usageMapFromFile[code] / usageDaysCount) * 10) / 10;
+    });
+  }
+
+  // 재고 감소량 기반 일평균 (사용량 파일 없을 때 폴백)
+  var usageMapFromStock = {};
+  var stockDates = allDates.slice(-7);
+  if (stockDates.length >= 2) {
+    var oldestInv = dailyData[stockDates[0]]?.inventory || [];
+    var latestInv = dailyData[stockDates[stockDates.length-1]]?.inventory || [];
+    var oldMap = {};
+    oldestInv.forEach(function(d) { oldMap[d.code] = d.qty || 0; });
+    latestInv.forEach(function(d) {
+      var diff = (oldMap[d.code] || 0) - (d.qty || 0);
+      // 재고 감소 = 사용 - 입고. 음수(재고 증가)는 입고가 있었다는 의미이므로 0으로 처리
+      if (diff > 0) usageMapFromStock[d.code] = Math.round((diff / stockDates.length) * 10) / 10;
+    });
+  }
+
+  // 최종 일평균: 사용량 파일 우선, 없으면 재고 감소량 사용
+  var usageMap = usageDaysCount > 0 ? usageMapFromFile : usageMapFromStock;
+  var usageSource = usageDaysCount > 0 ? '사용량파일(' + usageDaysCount + '일)' : '재고감소량(' + stockDates.length + '일)';
+
+  // 기간별 소모량(forecastUsage) 일평균 계산
+  var forecastUsageMap = {};
+  var forecastPeriodDays = 0;
+  if (fu.from && fu.to && fu.items && fu.items.length > 0) {
+    var d1 = new Date(fu.from), d2 = new Date(fu.to);
+    forecastPeriodDays = Math.max(1, Math.round((d2 - d1) / 86400000) + 1);
+    fu.items.forEach(function(item) {
+      forecastUsageMap[item.code] = Math.round((item.total / forecastPeriodDays) * 10) / 10;
+    });
+  }
+
   var inventorySummary;
   var hasMaster = Object.keys(masterCodes).length > 0;
+  var buildItem = function(d) {
+    var code = d.code || '';
+    var qty = d.qty != null ? d.qty : 0;
+    // 우선순위: 기간소모량 > 사용량파일 > 재고감소량
+    var dailyUsage = forecastUsageMap[code] || usageMap[code] || 0;
+    var daysLeft = dailyUsage > 0 ? Math.round(qty / dailyUsage) : 999;
+    return { code: code, name: (d.name || '').substring(0, 40), qty: qty, dailyUsage: dailyUsage, daysLeft: daysLeft };
+  };
+
   if (hasMaster) {
-    // 마스터 목록 있으면 해당 분류만 필터
     inventorySummary = inv.filter(function(d) {
       return masterCodes[(d.code || '').toUpperCase()];
-    }).map(function(d) {
-      return { code: d.code || '', name: (d.name || '').substring(0, 40), qty: d.qty != null ? d.qty : 0 };
-    });
+    }).map(buildItem);
   } else {
-    // 마스터 없으면 전체 전송 (초기 상태)
-    inventorySummary = inv.map(function(d) {
-      return { code: d.code || '', name: (d.name || '').substring(0, 40), qty: d.qty != null ? d.qty : 0 };
-    });
+    inventorySummary = inv.map(buildItem);
   }
 
   // 현재 알림 수집
   var recentAlerts = [];
-  var alertEls = document.querySelectorAll('.alert-box');
-  alertEls.forEach(function(el) {
+  document.querySelectorAll('.alert-box').forEach(function(el) {
     var t = el.textContent.trim();
     if (t && recentAlerts.length < 10) recentAlerts.push(t);
   });
+
+  // 어떤 데이터가 있는지 메타 정보
+  var dataAvailability = {
+    inventoryDays: allDates.filter(function(d) { return dailyData[d]?.inventory; }).length,
+    usageFileDays: usageDaysCount,
+    hasForecastUsage: forecastPeriodDays > 0,
+    forecastPeriod: fu.from && fu.to ? fu.from + ' ~ ' + fu.to + ' (' + forecastPeriodDays + '일)' : '',
+    usageSource: usageSource,
+    latestInventoryDate: allDates.filter(function(d) { return dailyData[d]?.inventory; }).slice(-1)[0] || '',
+  };
 
   return {
     dataType: appDataType,
@@ -4752,7 +4911,16 @@ function _aiBuildContext() {
     drugMasterSummary: '항암제 ' + dm.length + '개, 일반약 ' + gdm.length + '개',
     recentAlerts: recentAlerts,
     filteredDrugList: _aiGetFilteredDrugList(),
-    newsContext: _aiGetFilteredNews()
+    newsContext: _aiGetFilteredNews(),
+    historicalDays: recentDates.length,
+    dataAvailability: dataAvailability,
+    forecastUsageSummary: forecastPeriodDays > 0 ? {
+      period: dataAvailability.forecastPeriod,
+      itemCount: fu.items.length,
+      topItems: fu.items.sort(function(a,b){ return b.total - a.total; }).slice(0, 20).map(function(i) {
+        return { code: i.code, name: (i.name||'').substring(0,40), total: i.total, dailyAvg: forecastUsageMap[i.code] || 0 };
+      })
+    } : null
   };
 }
 
@@ -4800,7 +4968,10 @@ async function sendAiMessage() {
         drugMasterSummary: ctx.drugMasterSummary,
         recentAlerts: ctx.recentAlerts,
         filteredDrugList: ctx.filteredDrugList,
-        newsContext: ctx.newsContext
+        newsContext: ctx.newsContext,
+        historicalDays: ctx.historicalDays,
+        dataAvailability: ctx.dataAvailability,
+        forecastUsageSummary: ctx.forecastUsageSummary
       })
     });
     var data = await res.json();
@@ -4846,7 +5017,7 @@ window.addEventListener('DOMContentLoaded', function() {
   <div class="ai-chat-hdr">
     <div>
       <div class="ai-chat-hdr-title">AI 어시스턴트 <span id="aiModeBadge" class="ai-mode-badge">항암제 모드</span></div>
-      <div class="ai-chat-hdr-sub" id="aiChatSub">Grok 4.1 Fast | Multi-Agent</div>
+      <div class="ai-chat-hdr-sub" id="aiChatSub">xAI Grok 4.1 Fast | 재고관리 전문</div>
     </div>
     <button onclick="clearAiChat()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;padding:2px 6px;" title="대화 초기화">초기화</button>
     <button class="ai-chat-hdr-close" onclick="toggleAiChat()">X</button>
