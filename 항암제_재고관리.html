@@ -1436,15 +1436,7 @@ function parseInventory(wb) {
       total: parseFloat(String(r['총금액'] || '0').replace(/,/g,'')) || 0
     };
   }).filter(function(r) {
-    // 물품코드가 없으면 제외
-    if (!r.code || !r.name) return false;
-    
-    // 물품코드가 숫자로만 구성된 경우만 허용 (예: 123456)
-    // 또는 대표물품코드가 있는 경우 (대표물품코드 우선 사용)
-    var isNumericCode = /^\d+$/.test(r.code);
-    
-    // 물품코드가 숫자가 아니면 제외 (예: CAMTOBEL 같은 문자 코드 제외)
-    return isNumericCode;
+    return r.code && r.barcode && /^\d+$/.test(r.barcode) && r.name;
   });
   console.log('[1.xlsx] 파싱완료:', state.inventory.length, '품목, qty>0:', state.inventory.filter(function(r){return r.qty>0;}).length);
   if (state.inventoryFileType === '특수조제') {
