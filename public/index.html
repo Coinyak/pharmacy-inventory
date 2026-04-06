@@ -1253,8 +1253,10 @@ function getStatsData() {
     Object.keys(state.dailyData).forEach(function(date) {
       if (date.substring(0,7) === ym) {
         if (date === wd) {
-          // 현재 작업일: 메모리 데이터 우선 (업로드 직후 반영)
-          addDate(date, { inpatientMix: state.inpatientMix || state.dailyData[date].inpatientMix, outpatientData: state.outpatientData || state.dailyData[date].outpatientData });
+          // 현재 작업일: 메모리에 데이터가 있으면 우선, 없으면 dailyData 사용
+          var curMix = (state.inpatientMix && state.inpatientMix.length > 0) ? state.inpatientMix : state.dailyData[date].inpatientMix;
+          var curOut = (state.outpatientData && state.outpatientData.length > 0) ? state.outpatientData : state.dailyData[date].outpatientData;
+          addDate(date, { inpatientMix: curMix, outpatientData: curOut });
         } else {
           addDate(date, state.dailyData[date]);
         }
@@ -1274,7 +1276,9 @@ function getStatsData() {
   Object.keys(state.dailyData).sort().forEach(function(date) {
     if (date >= from && date <= to) {
       if (date === wd) {
-        addDate(date, { inpatientMix: state.inpatientMix || state.dailyData[date].inpatientMix, outpatientData: state.outpatientData || state.dailyData[date].outpatientData });
+        var curMix = (state.inpatientMix && state.inpatientMix.length > 0) ? state.inpatientMix : state.dailyData[date].inpatientMix;
+        var curOut = (state.outpatientData && state.outpatientData.length > 0) ? state.outpatientData : state.dailyData[date].outpatientData;
+        addDate(date, { inpatientMix: curMix, outpatientData: curOut });
       } else {
         addDate(date, state.dailyData[date]);
       }
