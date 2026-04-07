@@ -236,6 +236,32 @@ td.stock-highlight { background:#fefce8; font-weight:700; }
 .memo-slide .memo-save { padding:4px 12px; font-size:11px; font-weight:600; background:#3b82f6; color:#fff; border:none; border-radius:4px; cursor:pointer; }
 .memo-slide .memo-save:hover { background:#2563eb; }
 
+/* 대시보드 알림 섹션 */
+.dash-alerts-section { display:flex; gap:12px; margin-bottom:16px; }
+.dash-alert-group { flex:1; min-width:0; background:#fff; border-radius:10px; border:1px solid #e2e8f0; overflow:hidden; }
+.dash-alert-group-header { padding:8px 12px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.dash-alert-group-header .badge { display:inline-block; min-width:18px; text-align:center; padding:1px 6px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; }
+.dash-alert-group.past .dash-alert-group-header { background:#fef2f2; color:#991b1b; border-bottom:1px solid #fecaca; }
+.dash-alert-group.past .badge { background:#dc2626; }
+.dash-alert-group.today .dash-alert-group-header { background:#fefce8; color:#854d0e; border-bottom:1px solid #fde68a; }
+.dash-alert-group.today .badge { background:#d97706; }
+.dash-alert-group.soon .dash-alert-group-header { background:#eff6ff; color:#1e40af; border-bottom:1px solid #bfdbfe; }
+.dash-alert-group.soon .badge { background:#3b82f6; }
+.dash-alert-list { max-height:200px; overflow-y:auto; padding:6px; }
+.dash-alert-list::-webkit-scrollbar { width:4px; }
+.dash-alert-list::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+.dash-alert-item { padding:8px 10px; border-radius:8px; margin-bottom:4px; font-size:12px; line-height:1.5; background:#f8fafc; border:1px solid #f1f5f9; }
+.dash-alert-item:last-child { margin-bottom:0; }
+.dash-alert-item .patient-name { font-weight:700; font-size:13px; color:#1e293b; }
+.dash-alert-item .drug-info { color:#475569; margin-top:2px; }
+.dash-alert-item .stock-info { font-size:11px; margin-top:2px; }
+.dash-alert-item .memo-info { font-size:11px; color:#6366f1; margin-top:3px; padding:3px 6px; background:#eef2ff; border-radius:4px; }
+.dash-alert-item .date-badge { display:inline-block; padding:1px 6px; border-radius:4px; font-size:11px; font-weight:700; margin-left:4px; }
+.dash-alert-item .date-badge.past { background:#fee2e2; color:#991b1b; }
+.dash-alert-item .date-badge.today { background:#fef3c7; color:#92400e; }
+.dash-alert-item .date-badge.soon { background:#dbeafe; color:#1e40af; }
+.dash-alert-empty { text-align:center; padding:16px; color:#94a3b8; font-size:12px; }
+
 /* 로그인 화면 */
 .login-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1e3a5f,#2563eb); z-index:9999; display:flex; align-items:center; justify-content:center; }
 .login-box { background:#fff; border-radius:12px; padding:40px; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.3); }
@@ -391,9 +417,9 @@ body.general-mode .text-blue { color:#16a34a; }
       <input type="date" id="forecastFrom">
       <span style="font-size:13px;">~</span>
       <input type="date" id="forecastTo">
-      <div class="upload-zone" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-width:1px;" onclick="document.getElementById('forecastFile').click()">
+      <div class="upload-zone" id="forecastZone" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-width:1px;" onclick="document.getElementById('forecastFile').click()" ondragover="dzOver(event,this)" ondragleave="dzLeave(this)" ondrop="dzDropForecast(event,this)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <b style="font-size:13px;">사용량 파일 업로드</b>
+        <b style="font-size:13px;">사용량 파일 업로드 (드래그 가능)</b>
         <input type="file" id="forecastFile" accept=".xlsx,.xls" class="hidden" onchange="handleForecastFile(event)">
       </div>
     </div>
@@ -1434,12 +1460,54 @@ function renderAmpmStats(sd) {
     var wd = getWorkDate();
     dates[wd] = { mix: sd.mix, out: sd.out };
   }
-  var sortedDates = Object.keys(dates).sort();
+
+  // 월별 모드일 때: 해당 월의 모든 평일(월~금) 날짜를 포함
+  var allDates = [];
+  var monthLabel = '';
+  var monthEl = document.getElementById('statsMonth');
+  var ym = monthEl ? monthEl.value : '';
+  if (_statsPeriod === 'monthly' && ym) {
+    var parts = ym.split('-');
+    var year = parseInt(parts[0]), month = parseInt(parts[1]);
+    monthLabel = year + '년 ' + month + '월';
+    var daysInMonth = new Date(year, month, 0).getDate();
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dt = new Date(year, month - 1, d);
+      var dow = dt.getDay();
+      if (dow === 0 || dow === 6) continue; // 주말 제외
+      var dateStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      allDates.push(dateStr);
+    }
+  } else if (_statsPeriod === 'custom') {
+    var fromEl = document.getElementById('statsDateFrom');
+    var toEl = document.getElementById('statsDateTo');
+    if (fromEl && toEl && fromEl.value && toEl.value) {
+      monthLabel = fromEl.value + ' ~ ' + toEl.value;
+      var cur = new Date(fromEl.value);
+      var end = new Date(toEl.value);
+      while (cur <= end) {
+        var dow = cur.getDay();
+        if (dow !== 0 && dow !== 6) {
+          allDates.push(cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0'));
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+  }
+  // 데이터가 있는 날짜 + 전체 날짜 병합
+  var sortedDates = allDates.length > 0 ? allDates : Object.keys(dates).sort();
   if (sortedDates.length === 0) { el.innerHTML = ''; return; }
+  // monthLabel 폴백
+  if (!monthLabel && sortedDates.length > 0) {
+    var fp = sortedDates[0].split('-');
+    monthLabel = parseInt(fp[0]) + '년 ' + parseInt(fp[1]) + '월';
+  }
 
   var dayNames = ['일','월','화','수','목','금','토'];
-  // 엑셀 양식: 요일 | 날짜 | AM/PM/total | 입원환자수 | 입원조제건수 | 외래환자수 | 외래조제건수 | Total조제건수 | 10시전 접수환자수 | 건수
-  var html = '<div style="overflow-x:auto;"><table class="stats-bordered">';
+  var html = '';
+  // 월 헤더
+  html += '<div style="text-align:center;margin-bottom:12px;"><span style="font-size:20px;font-weight:800;color:#1e293b;letter-spacing:1px;">' + monthLabel + ' 조제통계</span></div>';
+  html += '<div style="overflow-x:auto;"><table class="stats-bordered">';
   html += '<thead><tr><th style="width:30px;">요일</th><th style="width:50px;">날짜</th><th style="width:45px;"></th>';
   html += '<th style="text-align:right;">입원 환자수</th><th style="text-align:right;">입원 조제건수</th>';
   html += '<th style="text-align:right;">외래 환자수</th><th style="text-align:right;">외래 조제건수</th>';
@@ -1448,10 +1516,12 @@ function renderAmpmStats(sd) {
   html += '</tr></thead><tbody>';
 
   var grandInPts=0, grandInRx=0, grandOutPts=0, grandOutRx=0, grandTotal=0, grandBefore10Pts=0, grandBefore10Rx=0;
+  var dataExistDays = 0;
 
   sortedDates.forEach(function(date) {
-    var dayMix = (dates[date].mix || []).filter(function(r){ return !isVehicle(r.code); });
-    var dayOut = (dates[date].out || []).filter(function(r){ return !isVehicle(r.code); });
+    var hasData = !!dates[date];
+    var dayMix = hasData ? (dates[date].mix || []).filter(function(r){ return !isVehicle(r.code); }) : [];
+    var dayOut = hasData ? (dates[date].out || []).filter(function(r){ return !isVehicle(r.code); }) : [];
     var dp = date.split('-');
     var dt = new Date(parseInt(dp[0]), parseInt(dp[1])-1, parseInt(dp[2]));
     var dayName = dayNames[dt.getDay()];
@@ -1482,47 +1552,44 @@ function renderAmpmStats(sd) {
     var allInPts = new Set([...amPts, ...pmPts]);
     var allInRx = new Set([...amRx, ...pmRx]);
 
-    // AM행 (외래는 빈칸)
-    var amInP = amPts.size, amInR = amRx.size;
-    var amTotal = amInR;
-    // PM행 (외래는 빈칸)
-    var pmInP = pmPts.size, pmInR = pmRx.size;
-    var pmTotal = pmInR;
-    // total행
+    var amInP = amPts.size, amInR = amRx.size, amTotal = amInR;
+    var pmInP = pmPts.size, pmInR = pmRx.size, pmTotal = pmInR;
     var totInP = allInPts.size, totInR = allInRx.size, totOutP = outPts.size, totOutR = outRx.size;
     var totAll = totInR + totOutR;
     var b10P = before10Pts.size, b10R = before10Rx.size;
 
+    if (hasData && (dayMix.length > 0 || dayOut.length > 0)) dataExistDays++;
     grandInPts += totInP; grandInRx += totInR; grandOutPts += totOutP; grandOutRx += totOutR;
     grandTotal += totAll; grandBefore10Pts += b10P; grandBefore10Rx += b10R;
 
     var weekend = (dt.getDay() === 0 || dt.getDay() === 6);
     var dayStyle = weekend ? 'color:#dc2626;' : '';
+    var noDataStyle = !hasData ? 'opacity:0.4;' : '';
 
-    // AM 행 (요일+날짜 rowspan=3)
-    html += '<tr><td rowspan="3" style="text-align:center;font-weight:700;vertical-align:middle;' + dayStyle + '">' + dayName + '</td>';
+    // AM 행
+    html += '<tr style="' + noDataStyle + '"><td rowspan="3" style="text-align:center;font-weight:700;vertical-align:middle;' + dayStyle + '">' + dayName + '</td>';
     html += '<td rowspan="3" style="text-align:center;vertical-align:middle;">' + day + '</td>';
     html += '<td style="text-align:center;font-weight:600;color:#2563eb;">AM</td>';
-    html += '<td class="num">' + (amInP||'') + '</td><td class="num">' + (amInR||'') + '</td>';
+    html += '<td class="num">' + amInP + '</td><td class="num">' + amInR + '</td>';
     html += '<td class="num"></td><td class="num"></td>';
-    html += '<td class="num">' + (amTotal||'') + '</td>';
+    html += '<td class="num">' + amTotal + '</td>';
     html += '<td class="num"></td><td class="num"></td></tr>';
     // PM 행
-    html += '<tr><td style="text-align:center;font-weight:600;color:#dc2626;">PM</td>';
-    html += '<td class="num">' + (pmInP||'') + '</td><td class="num">' + (pmInR||'') + '</td>';
+    html += '<tr style="' + noDataStyle + '"><td style="text-align:center;font-weight:600;color:#dc2626;">PM</td>';
+    html += '<td class="num">' + pmInP + '</td><td class="num">' + pmInR + '</td>';
     html += '<td class="num"></td><td class="num"></td>';
-    html += '<td class="num">' + (pmTotal||'') + '</td>';
+    html += '<td class="num">' + pmTotal + '</td>';
     html += '<td class="num"></td><td class="num"></td></tr>';
     // total 행
-    html += '<tr style="background:#f8fafc;font-weight:600;"><td style="text-align:center;">total</td>';
-    html += '<td class="num">' + (totInP||'') + '</td><td class="num">' + (totInR||'') + '</td>';
-    html += '<td class="num">' + (totOutP||'') + '</td><td class="num">' + (totOutR||'') + '</td>';
-    html += '<td class="num" style="font-weight:700;">' + (totAll||'') + '</td>';
-    html += '<td class="num">' + (b10P||'') + '</td><td class="num">' + (b10R||'') + '</td></tr>';
+    html += '<tr style="background:#f8fafc;font-weight:600;' + noDataStyle + '"><td style="text-align:center;">total</td>';
+    html += '<td class="num">' + totInP + '</td><td class="num">' + totInR + '</td>';
+    html += '<td class="num">' + totOutP + '</td><td class="num">' + totOutR + '</td>';
+    html += '<td class="num" style="font-weight:700;">' + totAll + '</td>';
+    html += '<td class="num">' + b10P + '</td><td class="num">' + b10R + '</td></tr>';
   });
 
   // 월 합계
-  html += '<tr class="total-row"><td colspan="3" style="text-align:center;">합계</td>';
+  html += '<tr class="total-row"><td colspan="3" style="text-align:center;">합계 (' + dataExistDays + '일)</td>';
   html += '<td class="num">' + grandInPts + '</td><td class="num">' + grandInRx + '</td>';
   html += '<td class="num">' + grandOutPts + '</td><td class="num">' + grandOutRx + '</td>';
   html += '<td class="num">' + grandTotal + '</td>';
@@ -1736,6 +1803,24 @@ function saveState() {
 // 유틸리티
 // ============================================================
 function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+// 접수시간 → Excel 시리얼(0~1) 변환 (시간문자열, 정수시간, HHMM 등 지원)
+function normalizeExcelTime(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') {
+    if (val > 0 && val < 1) return val;
+    if (val >= 1 && val < 24) return val / 24;
+    if (val >= 100 && val < 2400) return (Math.floor(val/100) + (val%100)/60) / 24;
+    return 0;
+  }
+  if (typeof val === 'string') {
+    val = val.trim();
+    var m = val.match(/(\d{1,2}):(\d{2})/);
+    if (m) return (parseInt(m[1]) + parseInt(m[2])/60) / 24;
+    var n = parseFloat(val);
+    if (!isNaN(n) && n > 0) return normalizeExcelTime(n);
+  }
+  return 0;
+}
 // .xls 한글 깨짐 복구: EUC-KR 바이트가 Latin-1로 해석된 경우 재디코딩
 function fixKoreanEncoding(str) {
   if (!str || typeof str !== 'string') return str;
@@ -1813,6 +1898,15 @@ function dzDrop(e, el, num) {
 function handleFile(e, num) {
   const file = e.target.files[0];
   if (file) processFile(file, num);
+}
+// 수요예측 사용량 드래그앤드롭
+function dzDropForecast(e, el) {
+  e.preventDefault(); el.classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (!/\.(xls|xlsx)$/i.test(file.name)) { toast('xls/xlsx 파일만 업로드 가능합니다.', 'error'); return; }
+  var fakeEvent = { target: { files: [file], value: file.name } };
+  handleForecastFile(fakeEvent);
 }
 // 의약품집 드래그앤드롭
 function dzDropFormulary(e, el) {
@@ -2148,7 +2242,7 @@ function parseInpatientMix(wb) {
       var holdVal = String(r['보류'] || '').trim();
       if (dcVal || holdVal) return;
       // 접수시간 → 오전/오후
-      var receiptTime = parseFloat(r['접수시간']) || 0;
+      var receiptTime = normalizeExcelTime(r['접수시간']);
       var ampm = receiptTime > 0 ? (receiptTime < 0.5 ? '오전' : '오후') : '';
       var rowCategory = useTimeCategory ? (ampm || '기타') : category;
       allData.push({
@@ -2648,25 +2742,58 @@ function renderDashboard() {
     <div class="stat-card"><div class="num" style="color:#d97706">${zeroAlerts.length}</div><div class="label">제로관리약 알림</div></div>
   `;
 
-  // 알림 (부족 알림 제외 — 제로관리약 + 초기설정 안내만 표시)
-  let alertHtml = '';
-  // 실재고 맵
+  // 알림: 환자별 그룹 + 지나감/오늘/곧 섹션 + 메모
   const invMap = {};
   try { getRealInventory().forEach(r => { invMap[r.code] = r.realQty; }); } catch(e) {}
 
+  // 환자별 그룹핑
+  const patientMap = {};
   zeroAlerts.forEach(a => {
-    const cls = a.daysLeft <= 0 ? 'alert-red' : 'alert-yellow';
-    const icon = a.daysLeft <= 0 ? '[긴급]' : '[알림]';
+    const key = a.patient;
+    if (!patientMap[key]) patientMap[key] = { patient: a.patient, drugs: [], daysLeft: a.daysLeft, nextDate: a.nextDate, memo: '', memoDate: '' };
+    // 메모 찾기
+    const zd = (state.zeroDrugs || []).find(z => z.patient === a.patient && z.drugCode === a.drugCode);
+    if (zd && zd.memo && !patientMap[key].memo) { patientMap[key].memo = zd.memo; patientMap[key].memoDate = zd.memoDate || ''; }
     const stockQty = invMap[a.drugCode];
-    let stockInfo = '';
-    if (stockQty !== undefined) {
-      const short = stockQty < a.needQty;
-      const stockColor = stockQty <= 0 ? '#dc2626' : short ? '#b45309' : '#15803d';
-      stockInfo = ` <span style="font-size:11px;margin-left:4px;">필요 <b>${a.needQty}개</b> | 현재고 <b style="color:${stockColor};">${stockQty}개</b>${short ? ' <b style="color:#dc2626;">[부족]</b>' : ''}</span>`;
-    }
-    alertHtml += `<div class="alert-box ${cls}">${icon} <b>[제로관리약]</b> ${a.patient} - ${a.drugName}: ${a.daysLeft <= 0 ? '<b>오늘 방문 예정!</b>' : a.daysLeft + '일 후 방문 예정 (' + a.nextDate + ')'}${stockInfo}</div>`;
+    patientMap[key].drugs.push({ drugName: a.drugName, needQty: a.needQty, stockQty, daysLeft: a.daysLeft, nextDate: a.nextDate });
+    if (a.daysLeft < patientMap[key].daysLeft) { patientMap[key].daysLeft = a.daysLeft; patientMap[key].nextDate = a.nextDate; }
   });
-  if (!alertHtml) alertHtml = '<div class="alert-box alert-green">현재 알림 없음.</div>';
+  const patients = Object.values(patientMap);
+  const pastPats = patients.filter(p => p.daysLeft < 0).sort((a,b) => a.daysLeft - b.daysLeft);
+  const todayPats = patients.filter(p => p.daysLeft === 0);
+  const soonPats = patients.filter(p => p.daysLeft > 0).sort((a,b) => a.daysLeft - b.daysLeft);
+
+  function renderAlertItem(p) {
+    let dateBadge = '';
+    let cls = '';
+    if (p.daysLeft < 0) { dateBadge = `<span class="date-badge past">D${p.daysLeft}</span>`; cls = 'past'; }
+    else if (p.daysLeft === 0) { dateBadge = `<span class="date-badge today">D-Day</span>`; cls = 'today'; }
+    else { dateBadge = `<span class="date-badge soon">D-${p.daysLeft}</span>`; cls = 'soon'; }
+    let drugLines = p.drugs.map(d => {
+      let stockStr = '';
+      if (d.stockQty !== undefined) {
+        const short = d.stockQty < d.needQty;
+        const sc = d.stockQty <= 0 ? '#dc2626' : short ? '#b45309' : '#15803d';
+        stockStr = ` <span class="stock-info">필요 <b>${d.needQty}</b> | 재고 <b style="color:${sc};">${d.stockQty}</b>${short ? ' <b style="color:#dc2626;">[부족]</b>' : ''}</span>`;
+      }
+      return `<div class="drug-info">${d.drugName}${stockStr}</div>`;
+    }).join('');
+    let memoHtml = p.memo ? `<div class="memo-info">${p.memo}</div>` : '';
+    return `<div class="dash-alert-item"><div><span class="patient-name">${p.patient}</span>${dateBadge} <span style="font-size:11px;color:#64748b;">${p.nextDate}</span></div>${drugLines}${memoHtml}</div>`;
+  }
+
+  function renderGroup(label, icon, cls, items) {
+    const count = items.length;
+    let listHtml = count > 0 ? items.map(renderAlertItem).join('') : '<div class="dash-alert-empty">없음</div>';
+    return `<div class="dash-alert-group ${cls}"><div class="dash-alert-group-header">${icon} ${label} <span class="badge">${count}</span></div><div class="dash-alert-list">${listHtml}</div></div>`;
+  }
+
+  let alertHtml = '<div class="dash-alerts-section">';
+  alertHtml += renderGroup('지나감', '[!]', 'past', pastPats);
+  alertHtml += renderGroup('오늘', '[*]', 'today', todayPats);
+  alertHtml += renderGroup('예정', '[i]', 'soon', soonPats);
+  alertHtml += '</div>';
+  if (zeroAlerts.length === 0) alertHtml = '<div class="alert-box alert-green">현재 제로관리약 알림 없음.</div>';
   document.getElementById('dashAlerts').innerHTML = alertHtml;
   updateForecastUploadStatus();
 }
@@ -2946,7 +3073,7 @@ function getZeroAlerts() {
     const diff = Math.floor((new Date(z.nextDate) - now) / 86400000);
     const needQty = z.qty * getDayCount(z);
     return { patient: z.patient, drugName: z.drugName, drugCode: z.drugCode, nextDate: z.nextDate, daysLeft: diff, needQty };
-  }).filter(a => a.daysLeft <= 7).sort((a,b) => a.daysLeft - b.daysLeft);
+  }).filter(a => a.daysLeft <= 7 && a.daysLeft >= -14).sort((a,b) => a.daysLeft - b.daysLeft);
 }
 
 function toggleDayInput() {
