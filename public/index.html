@@ -1391,6 +1391,10 @@ function getStatsData() {
   }
   return { mix: mix, out: out, label: from + ' ~ ' + to + ' (' + dayCount + '일)', days: dayCount, perDate: perDate };
 }
+// 캐시 행이 풀 집계 형태인지 검증 (예전 AM/PM-only 행은 무효)
+function isFullAggregate(s) {
+  return !!(s && (s.depts || s.drugDept || s.drugDetail));
+}
 // 일별 집계 객체 가져오기 (raw 우선, 없으면 서버 캐시)
 function getDailyAggregateForDate(date, perDate) {
   if (perDate && perDate[date]) {
@@ -1398,7 +1402,7 @@ function getDailyAggregateForDate(date, perDate) {
     var hasRaw = (d.mix && d.mix.length > 0) || (d.out && d.out.length > 0);
     if (hasRaw) return buildDailyStatsFull(d.mix || [], d.out || []);
   }
-  if (_longTermStatsCache && _longTermStatsCache.data && _longTermStatsCache.data[date]) {
+  if (_longTermStatsCache && _longTermStatsCache.data && isFullAggregate(_longTermStatsCache.data[date])) {
     return _longTermStatsCache.data[date];
   }
   return null;
@@ -1431,7 +1435,7 @@ function renderStats() {
     var fEl = document.getElementById('statsDateFrom'), tEl = document.getElementById('statsDateTo');
     if (fEl && tEl && fEl.value && tEl.value) {
       statDates = [];
-      var cur = new Date(fEl.value), end = new Date(tEl.value);
+      var cur = parseLocalYmd(fEl.value), end = parseLocalYmd(tEl.value);
       while (cur <= end) {
         statDates.push(cur.getFullYear() + '-' + String(cur.getMonth()+1).padStart(2,'0') + '-' + String(cur.getDate()).padStart(2,'0'));
         cur.setDate(cur.getDate() + 1);
@@ -1442,8 +1446,14 @@ function renderStats() {
   if (statDates.length === 0 && sd.perDate) {
     statDates = Object.keys(sd.perDate);
   }
-  // 메모리에 없는 날짜 → 서버 캐시 비동기 로드 (이후 재렌더)
-  var needFetch = statDates.some(function(d){ return !sd.perDate || !sd.perDate[d]; });
+  // 메모리에 없거나 raw가 비었고 캐시도 sparse면 서버 캐시 비동기 로드
+  var needFetch = statDates.some(function(d){
+    if (!sd.perDate || !Object.prototype.hasOwnProperty.call(sd.perDate, d)) return true;
+    var day = sd.perDate[d] || {};
+    var hasRaw = (day.mix && day.mix.length > 0) || (day.out && day.out.length > 0);
+    var cached = _longTermStatsCache && _longTermStatsCache.data && _longTermStatsCache.data[d];
+    return !hasRaw && !isFullAggregate(cached);
+  });
   if (needFetch && statDates.length > 0) {
     fetchLongTermStats(statDates[0], statDates[statDates.length - 1]);
   }
@@ -2904,16 +2914,17 @@ function getCurrentMasterCodes() {
 // 현재 모드의 마스터에 속하는 제로관리약만 반환 (모드 오염 방지)
 function getFilteredZeroDrugs() {
   const masterCodes = getCurrentMasterCodes();
-  if (masterCodes.size > 0) {
-    return state.zeroDrugs.filter(z => masterCodes.has(z.drugCode));
-  }
-  // 마스터 미설정 시: ANTICANCER_CODES로 역필터링
   if (appDataType === 'general') {
-    // 일반약 모드 → 항암제 코드 제외
+    // 일반약 모드 → 항암제 코드 제외 (마스터에 있어도, 없어도)
     return state.zeroDrugs.filter(z => !ANTICANCER_CODES.has(z.drugCode));
   }
-  // 항암제 모드 → 항암제 코드만 표시
-  return state.zeroDrugs.filter(z => ANTICANCER_CODES.has(z.drugCode));
+  // 항암제 모드: drugMaster + BUILTIN_DRUGS + ANTICANCER_CODES 합집합
+  // (등록 드롭다운과 동일한 풀을 봐야 등록 후에도 표시됨)
+  const allowed = new Set();
+  masterCodes.forEach(c => allowed.add(c));
+  if (typeof BUILTIN_DRUGS !== 'undefined') BUILTIN_DRUGS.forEach(d => allowed.add(d.code));
+  ANTICANCER_CODES.forEach(c => allowed.add(c));
+  return state.zeroDrugs.filter(z => allowed.has(z.drugCode));
 }
 
 function getFilteredInventory() {
