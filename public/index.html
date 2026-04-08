@@ -645,7 +645,7 @@ body.general-mode .text-blue { color:#16a34a; }
         <input type="number" id="zDayEnd" min="1" max="30" value="1" style="width:50px;" title="연속일 경우 마지막 Day">
         <input type="text" id="zDayPick" placeholder="예: 1,2,8" style="width:90px;display:none;" title="쉼표로 Day 번호 입력">
       </div>
-      <label style="font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">마지막투여일</label>
+      <label style="font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">투여시작일(D1)</label>
       <input type="date" id="zLastDate">
       <div></div>
       <div><button class="btn btn-primary" onclick="addZeroDrug()" style="width:100%;">등록</button></div>
@@ -3470,11 +3470,23 @@ function getZeroAlerts() {
   now.setHours(0,0,0,0);
   const out = [];
   getFilteredZeroDrugs().forEach(z => {
-    expandZeroDrugDates(z).forEach(dateStr => {
-      const diff = Math.floor((parseLocalYmd(dateStr) - now) / 86400000);
-      if (diff > 7 || diff < -14) return;
-      out.push({ patient: z.patient, regNo: z.regNo || '', drugName: z.drugName, drugCode: z.drugCode, nextDate: dateStr, daysLeft: diff, needQty: z.qty });
-    });
+    const dayList = getDayList(z);
+    const done = z.donedays || [];
+    function addDays(ymd, n) {
+      const d = parseLocalYmd(ymd);
+      d.setDate(d.getDate() + n);
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    // 현재 주기(nextDate)의 미투약 Day만 알림에 추가
+    if (z.nextDate) {
+      dayList.forEach(dn => {
+        if (done.includes(dn)) return;
+        const dateStr = addDays(z.nextDate, dn - 1);
+        const diff = Math.floor((parseLocalYmd(dateStr) - now) / 86400000);
+        if (diff > 7 || diff < -14) return;
+        out.push({ patient: z.patient, regNo: z.regNo || '', drugName: z.drugName, drugCode: z.drugCode, nextDate: dateStr, daysLeft: diff, needQty: z.qty });
+      });
+    }
   });
   return out.sort((a,b) => a.daysLeft - b.daysLeft);
 }
@@ -3535,33 +3547,19 @@ function addZeroDrug() {
   const drugCode = drugSel.value;
   const drugName = document.getElementById('zDrugSearch').value.trim();
   if (!patient || !drugCode || !drugName || !lastDate) {
-    toast('환자명, 약품, 마지막투여일을 모두 입력하세요.', 'error'); return;
+    toast('환자명, 약품, 투여시작일을 모두 입력하세요.', 'error'); return;
   }
-  // Day 목록 계산 (등록 시점 임시)
-  const tmpZ = { dayType, dayEnd, dayPick };
-  const tmpDayList = getDayList(tmpZ);
-  const maxDay = tmpDayList[tmpDayList.length - 1] || 1;
-  // lastDate를 이번 주기 D1로 해석 → 이번 주기가 아직 진행 중인지 판단
+  // 입력 날짜 = 이번 주기 D1 시작일
+  const tmpDayList = getDayList({ dayType, dayEnd, dayPick });
   const todayStr = today();
-  const lastEnd = (function(){ const d = parseLocalYmd(lastDate); d.setDate(d.getDate() + (maxDay - 1)); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
-  let actualLast, actualNext, donedays = [];
-  if (lastDate <= todayStr && todayStr <= lastEnd) {
-    // 이번 주기가 진행 중: lastDate를 현재 주기의 D1로 사용
-    actualNext = lastDate;
-    const prev = parseLocalYmd(lastDate); prev.setDate(prev.getDate() - cycle * 7);
-    actualLast = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
-    // 오늘까지 지난 Day는 자동 완료
-    tmpDayList.forEach(dn => {
-      const dt = parseLocalYmd(lastDate); dt.setDate(dt.getDate() + (dn - 1));
-      const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-      if (dStr <= todayStr) donedays.push(dn);
-    });
-  } else {
-    // 기존 동작: 다음 주기 = lastDate + cycle
-    const nx = parseLocalYmd(lastDate); nx.setDate(nx.getDate() + cycle * 7);
-    actualNext = nx.getFullYear()+'-'+String(nx.getMonth()+1).padStart(2,'0')+'-'+String(nx.getDate()).padStart(2,'0');
-    actualLast = lastDate;
-  }
+  const prev = parseLocalYmd(lastDate); prev.setDate(prev.getDate() - cycle * 7);
+  const actualLast = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
+  const donedays = [];
+  tmpDayList.forEach(dn => {
+    const dt = parseLocalYmd(lastDate); dt.setDate(dt.getDate() + (dn - 1));
+    const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if (dStr <= todayStr) donedays.push(dn);
+  });
   state.zeroDrugs.push({
     id: Date.now(),
     patient, regNo,
@@ -3571,7 +3569,7 @@ function addZeroDrug() {
     qty,
     dayType, dayEnd, dayPick,
     lastDate: actualLast,
-    nextDate: actualNext,
+    nextDate: lastDate,
     donedays
   });
   saveState();
@@ -3593,7 +3591,7 @@ function prefillAddDrug(id) {
   document.getElementById('zPatient').value = z.patient;
   document.getElementById('zRegNo').value = z.regNo || '';
   document.getElementById('zCycle').value = z.cycleWeeks;
-  document.getElementById('zLastDate').value = z.lastDate;
+  document.getElementById('zLastDate').value = z.nextDate || z.lastDate;
   document.getElementById('zDayType').value = z.dayType || 'single';
   document.getElementById('zDayEnd').value = z.dayEnd || 1;
   document.getElementById('zDayPick').value = z.dayPick || '';
@@ -3724,11 +3722,20 @@ function saveEditDrug(id) {
   z.dayType = document.getElementById('edt-' + id).value;
   z.dayEnd = parseInt(document.getElementById('ede-' + id).value) || 1;
   z.dayPick = document.getElementById('edp-' + id).value.trim();
-  z.lastDate = document.getElementById('eld-' + id).value || z.lastDate;
-  // 다음 주기 재계산
-  const next = new Date(z.lastDate);
-  next.setDate(next.getDate() + z.cycleWeeks * 7);
-  z.nextDate = next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0')+'-'+String(next.getDate()).padStart(2,'0');
+  // 입력값 = 이번 주기 D1 시작일
+  const startDate = document.getElementById('eld-' + id).value || z.nextDate || z.lastDate;
+  z.nextDate = startDate;
+  const prev = parseLocalYmd(startDate); prev.setDate(prev.getDate() - z.cycleWeeks * 7);
+  z.lastDate = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
+  // 오늘까지 지난 Day는 자동 완료
+  const todayStr = today();
+  const dl = getDayList(z);
+  z.donedays = [];
+  dl.forEach(dn => {
+    const dt = parseLocalYmd(startDate); dt.setDate(dt.getDate() + (dn - 1));
+    const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if (dStr <= todayStr) z.donedays.push(dn);
+  });
   saveState();
   renderZeroDrugs();
   toast(z.drugName + ' 수정 완료!', 'success');
@@ -3917,7 +3924,7 @@ function renderZeroDrugs() {
       html += `<option value="range"${z.dayType==='range'?' selected':''}>연속(D1~DN)</option>`;
       html += `<option value="pick"${z.dayType==='pick'?' selected':''}>선택(D1,D2..)</option>`;
       html += `</select>`;
-      html += `<label style="font-weight:600;">마지막일</label><input type="date" id="eld-${z.id}" value="${z.lastDate}" style="padding:3px 6px;font-size:12px;">`;
+      html += `<label style="font-weight:600;">시작일(D1)</label><input type="date" id="eld-${z.id}" value="${z.nextDate || z.lastDate}" style="padding:3px 6px;font-size:12px;">`;
       html += `<label style="font-weight:600;" id="edeLbl-${z.id}"${z.dayType==='range'?'':' style="display:none;"'}>끝Day</label>`;
       html += `<input type="number" id="ede-${z.id}" value="${z.dayEnd||1}" min="1" max="30" style="width:50px;padding:3px 6px;font-size:12px;${z.dayType==='range'?'':'display:none;'}">`;
       html += `<label style="font-weight:600;" id="edpLbl-${z.id}"${z.dayType==='pick'?'':' style="display:none;"'}>Day들</label>`;
