@@ -1098,6 +1098,9 @@ async function loadFromD1() {
       }
     }
 
+    // 제로관리약 마이그레이션: 진행 중 주기의 지난 Day 자동 완료
+    try { migrateZeroDrugDonedays(); } catch(e) { console.warn('zero migration:', e); }
+
     // 반대편 마스터도 로드 (뉴스 원내/원외 매칭용)
     await loadOtherMaster();
   } catch (e) {
@@ -3463,6 +3466,25 @@ function expandZeroDrugDates(z) {
     }
   });
   return Array.from(dates).sort();
+}
+
+function migrateZeroDrugDonedays() {
+  if (!state.zeroDrugs || !state.zeroDrugs.length) return;
+  const todayStr = today();
+  let changed = false;
+  state.zeroDrugs.forEach(z => {
+    if (!z.nextDate) return;
+    const dayList = getDayList(z);
+    const done = z.donedays || [];
+    dayList.forEach(dn => {
+      if (done.includes(dn)) return;
+      const dt = parseLocalYmd(z.nextDate); dt.setDate(dt.getDate() + (dn - 1));
+      const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      if (dStr < todayStr) { done.push(dn); changed = true; }
+    });
+    if (changed) { done.sort((a,b)=>a-b); z.donedays = done; }
+  });
+  if (changed) saveState();
 }
 
 function getZeroAlerts() {
