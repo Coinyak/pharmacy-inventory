@@ -3485,29 +3485,34 @@ function migrateZeroDrugDonedays() {
     if (z._zv2) return; // 이미 마이그레이션됨
     if (!z.nextDate && !z.lastDate) { z._zv2 = true; changed = true; return; }
 
-    const dayList = getDayList(z);
-    const maxDay = dayList[dayList.length - 1] || 1;
-    const cycleDays = (z.cycleWeeks || 3) * 7;
+    try {
+      const dayList = getDayList(z);
+      // pick 타입은 입력 순서가 섞일 수 있으므로 실제 최대값 사용
+      const maxDay = dayList.length ? Math.max.apply(null, dayList) : 1;
+      const cycleDays = (z.cycleWeeks || 3) * 7;
 
-    // 오염 가능성이 있는 donedays 초기화
-    z.donedays = [];
+      // 오염 가능성이 있는 donedays 초기화
+      z.donedays = [];
 
-    // 현재 주기 결정: lastDate 주기가 아직 진행 중이면 그것을 현재 주기로 승격
-    let cycleStart = z.nextDate || z.lastDate;
-    if (z.lastDate) {
-      const lastEnd = parseLocalYmd(z.lastDate);
-      lastEnd.setDate(lastEnd.getDate() + (maxDay - 1));
-      if (z.lastDate <= todayStr && todayStr <= ymd(lastEnd)) {
-        cycleStart = z.lastDate;
+      // 현재 주기 결정: lastDate 주기가 아직 진행 중이면 그것을 현재 주기로 승격
+      let cycleStart = z.nextDate || z.lastDate;
+      if (z.lastDate) {
+        const lastEnd = parseLocalYmd(z.lastDate);
+        lastEnd.setDate(lastEnd.getDate() + (maxDay - 1));
+        if (z.lastDate <= todayStr && todayStr <= ymd(lastEnd)) {
+          cycleStart = z.lastDate;
+        }
       }
-    }
 
-    z.nextDate = cycleStart;
-    const prev = parseLocalYmd(cycleStart); prev.setDate(prev.getDate() - cycleDays);
-    z.lastDate = ymd(prev);
-    z.pastUndone = [];
-    z._zv2 = true;
-    changed = true;
+      z.nextDate = cycleStart;
+      const prev = parseLocalYmd(cycleStart); prev.setDate(prev.getDate() - cycleDays);
+      z.lastDate = ymd(prev);
+      z.pastUndone = [];
+      z._zv2 = true;
+      changed = true;
+    } catch (e) {
+      console.warn('zero migration skip (malformed record):', z && z.id, e);
+    }
   });
 
   if (changed) saveState();
