@@ -3472,17 +3472,32 @@ function migrateZeroDrugDonedays() {
   if (!state.zeroDrugs || !state.zeroDrugs.length) return;
   const todayStr = today();
   let changed = false;
+  function ymd(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   state.zeroDrugs.forEach(z => {
     if (!z.nextDate) return;
     const dayList = getDayList(z);
+    const maxDay = dayList[dayList.length - 1] || 1;
+    const cycleDays = (z.cycleWeeks || 3) * 7;
+    // 1) lastDate 주기가 아직 진행 중이면 한 사이클 앞으로 당김
+    if (z.lastDate) {
+      const lastEnd = parseLocalYmd(z.lastDate); lastEnd.setDate(lastEnd.getDate() + (maxDay - 1));
+      if (todayStr <= ymd(lastEnd) && z.lastDate <= todayStr) {
+        z.nextDate = z.lastDate;
+        const prev = parseLocalYmd(z.lastDate); prev.setDate(prev.getDate() - cycleDays);
+        z.lastDate = ymd(prev);
+        z.donedays = z.donedays || [];
+        changed = true;
+      }
+    }
+    // 2) nextDate 주기에서 오늘 이전 Day는 자동완료
     const done = z.donedays || [];
     dayList.forEach(dn => {
       if (done.includes(dn)) return;
       const dt = parseLocalYmd(z.nextDate); dt.setDate(dt.getDate() + (dn - 1));
-      const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-      if (dStr < todayStr) { done.push(dn); changed = true; }
+      if (ymd(dt) < todayStr) { done.push(dn); changed = true; }
     });
-    if (changed) { done.sort((a,b)=>a-b); z.donedays = done; }
+    done.sort((a,b)=>a-b);
+    z.donedays = done;
   });
   if (changed) saveState();
 }
