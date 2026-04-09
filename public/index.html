@@ -1328,13 +1328,26 @@ function printStatsSection(section) {
 }
 function cleanDrugName(name) {
   if (!name) return '';
-  // Remove dosage info: numbers with units like mg, ml, g, mcg, iu, etc.
-  var cleaned = name.replace(/\s*\d+[\d,.]*\s*(mg|ml|g|mcg|ug|iu|unit|mci|mbq|kit|vial|tab|cap|amp|bag|btl|syr|pen)[\s/]*/gi, ' ');
-  // Remove parenthesized content
-  cleaned = cleaned.replace(/\s*\([^)]*\)/g, '');
-  // Remove trailing special chars and whitespace
-  cleaned = cleaned.replace(/[\s,./\-]+$/g, '').trim();
-  // Capitalize first letter
+  var cleaned = name;
+  // 여러 suffix가 겹칠 수 있어 반복 적용: 괄호 → 단위용량 → 제형토큰 → 꼬리숫자 → 구두점
+  for (var i = 0; i < 8; i++) {
+    var before = cleaned;
+    // 괄호 내용 제거
+    cleaned = cleaned.replace(/\s*\([^)]*\)/g, '');
+    // 숫자+단위(mg, ml, g 등) 제거
+    cleaned = cleaned.replace(/\s*\d+[\d,.]*\s*(mg|ml|g|mcg|ug|iu|unit|mci|mbq|%)\b/gi, ' ');
+    // 제형 토큰 제거 (inj, tab, cap 등) — SC/IV/PO 같은 route는 보존
+    cleaned = cleaned.replace(/(^|\s)(inj|tab|cap|syr|amp|vial|kit|bag|btl|pen|sol|cream|oint|patch|susp|pwd|powder)\b\.?/gi, ' ');
+    // 꼬리 숫자 제거 (단위 없이 "Ditaxel-1", "Ditaxel 1")
+    cleaned = cleaned.replace(/[\s\-]+\d+(\.\d+)?\s*$/g, '');
+    // 영문 4자+ 바로 뒤에 붙은 번호 제거 ("Ditaxel1" → "Ditaxel"). B12, K1 등 3자 이하는 보존
+    cleaned = cleaned.replace(/([A-Za-z]{4,})\d+/g, '$1');
+    // 꼬리 특수문자/공백
+    cleaned = cleaned.replace(/[\s,./\-]+$/g, '').trim();
+    // 공백 정규화 (중복 공백 제거)
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    if (cleaned === before) break;
+  }
   if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   return cleaned || name;
 }
@@ -3109,22 +3122,24 @@ function renderDashboard() {
   const invMap = {};
   try { getRealInventory().forEach(r => { invMap[r.code] = r.realQty; }); } catch(e) {}
 
-  // 환자별 그룹핑 (등록번호로 동명이인 구분)
-  const patientMap = {};
+  // 섹션별(지나감/오늘/예정) → 환자별 그룹핑
+  // 같은 환자라도 Day별 daysLeft에 따라 여러 섹션에 나눠 표시
+  const buckets = { past: {}, today: {}, soon: {} };
+  function bucketOf(dl) { return dl < 0 ? 'past' : dl === 0 ? 'today' : 'soon'; }
   zeroAlerts.forEach(a => {
+    const bk = bucketOf(a.daysLeft);
+    const map = buckets[bk];
     const key = a.patient + '|' + (a.regNo || '');
-    if (!patientMap[key]) patientMap[key] = { patient: a.patient, regNo: a.regNo || '', drugs: [], daysLeft: a.daysLeft, nextDate: a.nextDate, memo: '', memoDate: '' };
-    // 메모 찾기
+    if (!map[key]) map[key] = { patient: a.patient, regNo: a.regNo || '', drugs: [], daysLeft: a.daysLeft, nextDate: a.nextDate, memo: '', memoDate: '' };
     const zd = (state.zeroDrugs || []).find(z => z.patient === a.patient && (z.regNo || '') === (a.regNo || '') && z.drugCode === a.drugCode);
-    if (zd && zd.memo && !patientMap[key].memo) { patientMap[key].memo = zd.memo; patientMap[key].memoDate = zd.memoDate || ''; }
+    if (zd && zd.memo && !map[key].memo) { map[key].memo = zd.memo; map[key].memoDate = zd.memoDate || ''; }
     const stockQty = invMap[a.drugCode];
-    patientMap[key].drugs.push({ drugName: a.drugName, needQty: a.needQty, stockQty, daysLeft: a.daysLeft, nextDate: a.nextDate });
-    if (a.daysLeft < patientMap[key].daysLeft) { patientMap[key].daysLeft = a.daysLeft; patientMap[key].nextDate = a.nextDate; }
+    map[key].drugs.push({ drugName: a.drugName, needQty: a.needQty, stockQty, daysLeft: a.daysLeft, nextDate: a.nextDate, dayNum: a.dayNum });
+    if (a.daysLeft < map[key].daysLeft) { map[key].daysLeft = a.daysLeft; map[key].nextDate = a.nextDate; }
   });
-  const patients = Object.values(patientMap);
-  const pastPats = patients.filter(p => p.daysLeft < 0).sort((a,b) => a.daysLeft - b.daysLeft);
-  const todayPats = patients.filter(p => p.daysLeft === 0);
-  const soonPats = patients.filter(p => p.daysLeft > 0).sort((a,b) => a.daysLeft - b.daysLeft);
+  const pastPats = Object.values(buckets.past).sort((a,b) => a.daysLeft - b.daysLeft);
+  const todayPats = Object.values(buckets.today);
+  const soonPats = Object.values(buckets.soon).sort((a,b) => a.daysLeft - b.daysLeft);
 
   function renderAlertItem(p) {
     const safePatient = escapeHtml(p.patient || '');
@@ -3142,7 +3157,8 @@ function renderDashboard() {
         const sc = d.stockQty <= 0 ? '#dc2626' : short ? '#b45309' : '#15803d';
         stockStr = ` <span class="stock-info">필요 <b>${d.needQty}</b> | 재고 <b style="color:${sc};">${d.stockQty}</b>${short ? ' <b style="color:#dc2626;">[부족]</b>' : ''}</span>`;
       }
-      return `<div class="drug-info">${safeDrugName}${stockStr}</div>`;
+      const dayBadge = d.dayNum ? ` <span style="font-size:10px;color:#475569;background:#e2e8f0;padding:1px 5px;border-radius:3px;margin-left:3px;">D${d.dayNum}</span>` : '';
+      return `<div class="drug-info">${safeDrugName}${dayBadge}${stockStr}</div>`;
     }).join('');
     let memoHtml = p.memo ? `<div class="memo-info">${escapeHtml(p.memo)}</div>` : '';
     const rawRegNo = String(p.regNo || '');
@@ -3448,6 +3464,15 @@ function parseLocalYmd(ymd) {
   const [y, m, d] = ymd.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
+// 현재 주기에서 특정 Day의 실제 날짜 (개별 이동 오버라이드 반영)
+function getDayDate(z, dayNum) {
+  if (z && z.dayDates && z.dayDates[dayNum]) return z.dayDates[dayNum];
+  if (!z || !z.nextDate) return null;
+  const d = parseLocalYmd(z.nextDate);
+  d.setDate(d.getDate() + (dayNum - 1));
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
 // 제로관리약의 모든 예정 투여일 펼치기
 // lastDate/nextDate 기준으로 전후 여러 주기(±3주기)까지 포함
 function expandZeroDrugDates(z) {
@@ -3536,10 +3561,10 @@ function getZeroAlerts() {
     if (z.nextDate) {
       dayList.forEach(dn => {
         if (done.includes(dn)) return;
-        const dateStr = addDays(z.nextDate, dn - 1);
+        const dateStr = getDayDate(z, dn);
         const diff = Math.floor((parseLocalYmd(dateStr) - now) / 86400000);
-        if (diff > 7 || diff < -14) return;
-        out.push({ patient: z.patient, regNo: z.regNo || '', drugName: z.drugName, drugCode: z.drugCode, nextDate: dateStr, daysLeft: diff, needQty: z.qty });
+        if (diff > 7 || diff < -30) return;
+        out.push({ patient: z.patient, regNo: z.regNo || '', drugName: z.drugName, drugCode: z.drugCode, nextDate: dateStr, daysLeft: diff, needQty: z.qty, dayNum: dn });
       });
     }
   });
@@ -3561,7 +3586,7 @@ function getEffectiveNextDate(z) {
   if (z.nextDate) {
     dayList.forEach(dn => {
       if (done.includes(dn)) return;
-      candidates.push(addDays(z.nextDate, dn - 1));
+      candidates.push(getDayDate(z, dn));
     });
   }
   candidates.sort();
@@ -3687,13 +3712,18 @@ function autoAdvanceCycle(z) {
   if (!allDone) return false;
   const maxDay = Math.max.apply(null, dayList);
   const todayStr = today();
-  const last = parseLocalYmd(z.nextDate); last.setDate(last.getDate() + (maxDay - 1));
-  const lastStr = last.getFullYear()+'-'+String(last.getMonth()+1).padStart(2,'0')+'-'+String(last.getDate()).padStart(2,'0');
+  // 마지막 Day 실제 날짜 (개별 이동 오버라이드 반영)
+  const lastStr = getDayDate(z, maxDay);
   if (todayStr <= lastStr) return false; // 아직 이번 주기 마지막 날 안 지남
   z.lastDate = z.nextDate;
-  const nx = parseLocalYmd(z.nextDate); nx.setDate(nx.getDate() + (z.cycleWeeks || 3) * 7);
+  // 다음 주기 D1 = 마지막 실제 투여일 + (cycleDays - (maxDay-1))
+  // → 마지막 투여 요일이 유지되는 주기 정렬 (3주 주기 × 7일 = 정확히 같은 요일)
+  const cycleDays = (z.cycleWeeks || 3) * 7;
+  const nx = parseLocalYmd(lastStr);
+  nx.setDate(nx.getDate() + (cycleDays - (maxDay - 1)));
   z.nextDate = nx.getFullYear()+'-'+String(nx.getMonth()+1).padStart(2,'0')+'-'+String(nx.getDate()).padStart(2,'0');
   z.donedays = [];
+  z.dayDates = {}; // 개별 이동 오버라이드 초기화
   return true;
 }
 
@@ -3822,6 +3852,7 @@ function saveEditDrug(id) {
     if (dStr <= todayStr) z.donedays.push(dn);
   });
   z.pastUndone = [];
+  z.dayDates = {};
   z._zv2 = true;
   saveState();
   renderZeroDrugs();
@@ -4581,13 +4612,8 @@ function getMatchedHospitalDrug(newsItem) {
     }
   }
 
-  // 6단계: 성분명(ingredient) 매칭 - 최소 길이 강화
-  for (const c of cache) {
-    if (!c.ingredient) continue;
-    if (c.ingKor.length >= 4 && newsProductName.includes(c.ingKor)) return _found(c.drug);
-    if (c.ingEng.length >= 8 && newsLower.includes(c.ingEng)) return _found(c.drug);
-  }
-
+  // 6단계: 성분명 매칭은 제거 — 같은 성분의 다른 상품끼리 오매칭됨
+  // (예: 엔시트라정 뉴스가 트리돌서방정과 매칭되는 문제)
   return _found(null);
 }
 
@@ -4929,10 +4955,10 @@ function collectCalEvents(year, month) {
     const dayList = getDayList(z);
     const done = z.donedays || [];
     // 현재 주기
-    const baseDate = new Date(z.nextDate);
     dayList.forEach(d => {
-      const dt = new Date(baseDate); dt.setDate(dt.getDate() + (d - 1));
-      const dateStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      const dateStr = getDayDate(z, d);
+      if (!dateStr) return;
+      const dt = parseLocalYmd(dateStr);
       if (dt.getFullYear() === year && dt.getMonth() === month) {
         if (!events[dateStr]) events[dateStr] = [];
         events[dateStr].push({ patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:done.includes(d), zid:z.id });
@@ -5137,6 +5163,35 @@ function calClickDate(toDate) {
   zList.forEach(z => {
     const dayList = getDayList(z);
     const cycleDays = (z.cycleWeeks || 3) * 7;
+
+    // 현재 주기에서 fromDate에 해당하는 Day를 먼저 찾음
+    let clickedDay = null;
+    for (const dn of dayList) {
+      if (getDayDate(z, dn) === fromDate) { clickedDay = dn; break; }
+    }
+    if (clickedDay !== null) {
+      const done = z.donedays || [];
+      if (done.length === 0) {
+        // 아무 Day도 체크 안 됨 → 전체 주기를 diffDays만큼 함께 이동
+        const nn = parseLocalYmd(z.nextDate); nn.setDate(nn.getDate() + diffDays);
+        z.nextDate = fmtD(nn);
+        if (z.dayDates) {
+          const nd = {};
+          Object.keys(z.dayDates).forEach(k => {
+            const d = parseLocalYmd(z.dayDates[k]); d.setDate(d.getDate() + diffDays);
+            nd[k] = fmtD(d);
+          });
+          z.dayDates = nd;
+        }
+        console.log('[이동] 현재주기 전체이동(미체크):', diffDays, '일');
+      } else {
+        // 체크된 Day 고정 → 클릭한 Day만 개별 오버라이드
+        if (!z.dayDates) z.dayDates = {};
+        z.dayDates[clickedDay] = toDate;
+        console.log('[이동] D' + clickedDay + ' 개별이동(체크된 Day 고정):', fromDate, '->', toDate);
+      }
+      return;
+    }
 
     // 다중 주기 탐색: nextDate에서 최대 10주기 전까지 역추적
     function findCycleContaining(baseDate, searchDate) {
