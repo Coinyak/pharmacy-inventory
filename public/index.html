@@ -832,7 +832,7 @@ body.general-mode .text-blue { color:#16a34a; }
     <div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#1e40af;">API 키 갱신 방법</div>
       <ol style="font-size:12px;color:#475569;line-height:1.8;padding-left:18px;">
-        <li><a href="https://www.data.go.kr" target="_blank" style="color:#2563eb;">data.go.kr</a> 로그인 → 마이페이지 → <strong>개발계정</strong></li>
+        <li><a href="https://www.data.go.kr" target="_blank" rel="noopener noreferrer" style="color:#2563eb;">data.go.kr</a> 로그인 → 마이페이지 → <strong>개발계정</strong></li>
         <li>인증키 목록에서 현재 키 확인 → 만료 전 <strong>[연장신청]</strong> 클릭</li>
         <li>새 키가 발급되면 아래 명령어로 Cloudflare에 업데이트:</li>
       </ol>
@@ -6044,7 +6044,7 @@ function renderNewsPage() {
         html += '<div style="font-size:13px;color:#334155;line-height:1.8;margin-bottom:10px;">' + escapeHtml(item.summary).replace(/\n/g,'<br>') + '</div>';
       }
       if (item.link) {
-        html += '<a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener" '
+        html += '<a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener noreferrer" '
           + 'style="display:inline-block;font-size:12px;padding:5px 14px;background:#2563eb;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;">'
           + '원문 보기</a>';
       }
