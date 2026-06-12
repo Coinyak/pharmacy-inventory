@@ -1579,7 +1579,6 @@ function applyStatsReportDesign(ws, opts) {
   var lastCol = 12;
   var thin = { style: 'thin', color: { rgb: '000000' } };
   var medium = { style: 'medium', color: { rgb: '000000' } };
-  var none = { style: 'thin', color: { rgb: 'FFFFFF' } };
   var headerFill = { patternType: 'solid', fgColor: { rgb: '1F497D' } };
   var totalFill = { patternType: 'solid', fgColor: { rgb: 'D8D8D8' } };
   var fontTitle = { name: '맑은 고딕', sz: 14, bold: true };
@@ -1599,31 +1598,26 @@ function applyStatsReportDesign(ws, opts) {
       var cell = ensureCell(R, C);
       cell.s.font = (C === 0 && R >= 2 && R < totalRow) ? fontDrug : fontData;
       cell.s.alignment = alignCenter;
-      var top = thin, bottom = thin, left = thin, right = thin;
       if (R === 0) {
         cell.s.font = fontTitle;
-        top = medium; left = medium; right = medium;
       } else if (R === 1) {
         cell.s.fill = headerFill;
-        top = medium; bottom = thin;
-        if (C === 0) left = medium;
-        if (C === lastCol) { left = medium; right = medium; }
       } else if (R >= 2 && R < totalRow) {
-        if (C === 0) left = medium;
-        if (C === lastCol) { cell.s.fill = headerFill; left = medium; right = medium; }
-        if (C === 11) { left = none; right = none; }
+        if (C === lastCol) cell.s.fill = headerFill;
       } else if (R === totalRow) {
         cell.s.fill = totalFill;
-        top = medium; bottom = thin;
-        if (C === 0) left = medium;
-        if (C === lastCol) { left = medium; right = medium; }
-      } else if (R === tpnRow) {
-        bottom = medium;
-        if (C === 0) left = medium;
-        if (C === lastCol) { cell.s.fill = headerFill; left = medium; right = medium; }
-        if (C >= 1 && C <= 10) bottom = medium;
-        if (C === 11) { bottom = medium; left = none; right = none; }
+      } else if (R === tpnRow && C === lastCol) {
+        cell.s.fill = headerFill;
       }
+
+      // 모든 셀에 상·하·좌·우 테두리 적용 (내부: thin, 표 외곽: medium)
+      var top = thin, bottom = thin, left = thin, right = thin;
+      if (R === 0) { top = medium; bottom = thin; }
+      if (R === 1) top = medium;
+      if (R === totalRow) top = medium;
+      if (R === tpnRow) bottom = medium;
+      if (C === 0) left = medium;
+      if (C === lastCol) right = medium;
       cell.s.border = { top: top, bottom: bottom, left: left, right: right };
     }
   }
