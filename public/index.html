@@ -5458,7 +5458,7 @@ function exportStatsDeptExcel() {
       var dept = getReportDeptCode(r.doctor, r.dept);
       if (!drugDept[cname]) drugDept[cname] = {};
       if (!drugDept[cname][dept]) drugDept[cname][dept] = new Set();
-      drugDept[cname][dept].add(getStatsRxKey(r));
+      drugDept[cname][dept].add(getRxBundleKey(r));
     });
 
     var usedDepts = {};
