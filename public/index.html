@@ -1608,10 +1608,10 @@ function applyStatsReportDesign(ws, opts) {
   var totalRow = opts.totalRow;
   var tpnRow = opts.tpnRow;
   var lastDataRow = opts.lastDataRow;
+  var lastRow = (opts.lastRow != null) ? opts.lastRow : tpnRow;
   var lastCol = 12;
   var thin = { style: 'thin', color: { rgb: '000000' } };
   var medium = { style: 'medium', color: { rgb: '000000' } };
-  var none = { style: 'thin', color: { rgb: 'FFFFFF' } };
   var headerFill = { patternType: 'solid', fgColor: { rgb: '1F497D' } };
   var totalFill = { patternType: 'solid', fgColor: { rgb: 'D8D8D8' } };
   var fontTitle = { name: '맑은 고딕', sz: 14, bold: true };
@@ -1626,41 +1626,37 @@ function applyStatsReportDesign(ws, opts) {
     return ws[addr];
   }
 
-  for (var R = 0; R <= tpnRow; R++) {
+  for (var R = 0; R <= lastRow; R++) {
     for (var C = 0; C <= lastCol; C++) {
       var cell = ensureCell(R, C);
       cell.s.font = (C === 0 && R >= 2 && R < totalRow) ? fontDrug : fontData;
       cell.s.alignment = alignCenter;
-      var top = thin, bottom = thin, left = thin, right = thin;
       if (R === 0) {
         cell.s.font = fontTitle;
-        top = medium; left = medium; right = medium;
       } else if (R === 1) {
         cell.s.fill = headerFill;
-        top = medium; bottom = thin;
-        if (C === 0) left = medium;
-        if (C === lastCol) { left = medium; right = medium; }
       } else if (R >= 2 && R < totalRow) {
-        if (C === 0) left = medium;
-        if (C === lastCol) { cell.s.fill = headerFill; left = medium; right = medium; }
-        if (C === 11) { left = none; right = none; }
+        if (C === lastCol) cell.s.fill = headerFill;
       } else if (R === totalRow) {
         cell.s.fill = totalFill;
-        top = medium; bottom = thin;
-        if (C === 0) left = medium;
-        if (C === lastCol) { left = medium; right = medium; }
-      } else if (R === tpnRow) {
-        bottom = medium;
-        if (C === 0) left = medium;
-        if (C === lastCol) { cell.s.fill = headerFill; left = medium; right = medium; }
-        if (C >= 1 && C <= 10) bottom = medium;
-        if (C === 11) { bottom = medium; left = none; right = none; }
+      } else if (R === tpnRow && C === lastCol) {
+        cell.s.fill = headerFill;
       }
+
+      var top = thin, bottom = thin, left = thin, right = thin;
+      if (R === 0) { top = medium; bottom = thin; }
+      if (R === 1) top = medium;
+      if (R === totalRow) top = medium;
+      if (R === tpnRow) bottom = medium;
+      if (R === lastRow) bottom = medium;
+      if (C === 0) left = medium;
+      if (C === lastCol) right = medium;
       cell.s.border = { top: top, bottom: bottom, left: left, right: right };
     }
   }
 
   ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: lastCol } }];
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: lastCol } });
   ws['!cols'] = [{ wch: 13.125 }];
   for (var i = 1; i <= lastCol; i++) ws['!cols'].push({ wch: 8.43 });
   ws['!rows'] = [{ hpt: 36.75 }];
@@ -5476,6 +5472,8 @@ function exportStatsDeptExcel() {
     var lastDataRow = firstDataRow + DEFAULT_STATS_DRUG_ORDER.length - 1;
     var totalRowNum = lastDataRow + 1;
     var tpnRowNum = totalRowNum + 1;
+    var lastRowNum = tpnRowNum + 2;
+    var sumEndCol = XLSX.utils.encode_col(activeDepts.length);
 
     var aoa = [];
     aoa.push([title]);
@@ -5502,20 +5500,21 @@ function exportStatsDeptExcel() {
 
     DEFAULT_STATS_DRUG_ORDER.forEach(function(drug, idx){
       var excelRow = firstDataRow + idx;
-      ws['M' + excelRow] = { f: 'SUM(B' + excelRow + ':K' + excelRow + ')', t: 'n' };
+      ws['M' + excelRow] = { f: 'SUM(B' + excelRow + ':' + sumEndCol + excelRow + ')', t: 'n' };
     });
 
     activeDepts.forEach(function(d, i){
       var col = XLSX.utils.encode_col(i + 1);
       ws[col + totalRowNum] = { f: 'SUM(' + col + firstDataRow + ':' + col + lastDataRow + ')', t: 'n' };
     });
-    ws['M' + totalRowNum] = { f: 'SUM(B' + totalRowNum + ':K' + totalRowNum + ')', t: 'n' };
-    ws['M' + tpnRowNum] = { f: 'SUM(B' + tpnRowNum + ':K' + tpnRowNum + ')', t: 'n' };
+    ws['M' + totalRowNum] = { f: 'SUM(B' + totalRowNum + ':' + sumEndCol + totalRowNum + ')', t: 'n' };
+    ws['M' + tpnRowNum] = { f: 'SUM(B' + tpnRowNum + ':' + sumEndCol + tpnRowNum + ')', t: 'n' };
 
     applyStatsReportDesign(ws, {
       lastDataRow: lastDataRow,
       totalRow: totalRowNum - 1,
-      tpnRow: tpnRowNum - 1
+      tpnRow: tpnRowNum - 1,
+      lastRow: lastRowNum - 1
     });
 
     XLSX.utils.book_append_sheet(wb, ws, '항암제');
