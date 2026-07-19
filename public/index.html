@@ -461,6 +461,7 @@ body.general-mode .text-blue { color:#16a34a; }
           <th class="sortable" data-table="inv" data-key="name">물품명</th>
           <th>규격</th>
           <th class="sortable" data-table="inv" data-key="systemQty" style="text-align:right">전산재고</th>
+          <th class="sortable" data-table="inv" data-key="systemQtyUsed" style="text-align:right">전산재고(사용)</th>
           <th class="sortable" data-table="inv" data-key="realQty" style="text-align:right;color:#1e40af;font-weight:700">실재고</th>
           <th class="sortable" data-table="inv" data-key="manualSurplus" style="text-align:right">잉여</th>
           <th class="sortable" data-table="inv" data-key="usage" style="text-align:right;color:#dc2626;font-weight:700">사용량</th>
@@ -628,6 +629,7 @@ body.general-mode .text-blue { color:#16a34a; }
           <th class="sortable" data-table="forecast" data-key="dailyAvg" style="text-align:right">하루평균</th>
           <th class="sortable" data-table="forecast" data-key="monthlyAvg" style="text-align:right">월평균</th>
           <th class="sortable" data-table="forecast" data-key="systemStock" style="text-align:right;background:#f1f5f9;">전산재고</th>
+          <th class="sortable" data-table="forecast" data-key="systemStockUsed" style="text-align:right;background:#f1f5f9;">전산재고(사용)</th>
           <th class="sortable" data-table="forecast" data-key="currentStock" style="text-align:right;background:#fefce8;font-weight:700;">실재고</th>
           <th class="sortable" data-table="forecast" data-key="queryNeed" style="text-align:right">조회기간필요</th>
           <th class="sortable" data-table="forecast" data-key="diffSystem" style="text-align:right">과부족(전산)</th>
@@ -2558,6 +2560,7 @@ let state = {
 };
 let currentViewDate = ''; // 현재 조회 중인 날짜
 let sortStates = {}; // { "inv_code": "asc", "inv_name": "desc", ... }
+let orderDraft = {}; // { [code]: qty } — 발주수량 세션 임시 저장 (탭 전환/재렌더 유지)
 
 // 모드 전환 시 모든 상태를 초기화하는 단일 함수
 // 새 상태 변수 추가 시 반드시 여기에도 추가할 것
@@ -2584,6 +2587,7 @@ function resetAllState() {
   // 2) 뷰 / 정렬
   currentViewDate = '';
   sortStates = {};
+  orderDraft = {};
   // 3) 뉴스
   newsLoaded = false;
   newsData = null;
@@ -3403,16 +3407,20 @@ function getDemandForecast() {
   // realInvByBarcode: 물품코드(barcode) → realQty (수요예측 파일의 약품코드가 물품코드인 경우 fallback)
   const realInvMap = {};
   const sysInvMap = {};
+  const sysUsedInvMap = {};
   const barcodeMap = {};
   const realInvByBarcode = {};
   const sysInvByBarcode = {};
+  const sysUsedInvByBarcode = {};
   getRealInventory().forEach(r => {
     realInvMap[r.code] = r.realQty;
     sysInvMap[r.code] = r.systemQty;
+    sysUsedInvMap[r.code] = r.systemQtyUsed;
     barcodeMap[r.code] = r.barcode || '';
     if (r.barcode) {
       realInvByBarcode[r.barcode] = r.realQty;
       sysInvByBarcode[r.barcode] = r.systemQty;
+      sysUsedInvByBarcode[r.barcode] = r.systemQtyUsed;
     }
   });
   // 역방향 매핑: barcode → 대표물품코드 (masterCodes 조회용)
@@ -3447,6 +3455,9 @@ function getDemandForecast() {
     const systemStock = sysInvMap[item.code] !== undefined ? sysInvMap[item.code]
       : (sysInvMap[resolvedCode] !== undefined ? sysInvMap[resolvedCode]
       : (sysInvByBarcode[item.code] !== undefined ? sysInvByBarcode[item.code] : 0));
+    const systemStockUsed = sysUsedInvMap[item.code] !== undefined ? sysUsedInvMap[item.code]
+      : (sysUsedInvMap[resolvedCode] !== undefined ? sysUsedInvMap[resolvedCode]
+      : (sysUsedInvByBarcode[item.code] !== undefined ? sysUsedInvByBarcode[item.code] : 0));
     const queryNeed = queryDays > 0 ? Math.ceil(dailyAvg * queryDays) : 0;
     const diff = queryDays > 0 ? currentStock - queryNeed : currentStock - Math.ceil(monthlyAvg);
     const diffSystem = queryDays > 0 ? systemStock - queryNeed : systemStock - Math.ceil(monthlyAvg);
@@ -3456,7 +3467,7 @@ function getDemandForecast() {
       periodTotal: item.total,
       dailyAvg: parseFloat(dailyAvg.toFixed(1)),
       monthlyAvg: Math.round(monthlyAvg),
-      systemStock, currentStock, queryNeed, diff, diffSystem,
+      systemStock, systemStockUsed, currentStock, queryNeed, diff, diffSystem,
       status: diff < 0 ? 'shortage' : diff <= 2 ? 'tight' : 'ok'
     });
     debug.shown++;
@@ -3594,6 +3605,7 @@ function getRealInventory() {
     return {
       ...r,
       systemQty: r.qty,          // 전산재고
+      systemQtyUsed: r.qty - usage, // 전산재고(사용) = 전산재고 - 사용량
       autoSurplus: auto,         // 자동잉여 (참고용)
       manualSurplus: manual,     // 잉여
       stockDiff: manual,
@@ -3742,7 +3754,7 @@ function renderInventory() {
   const coldSet = new Set(state.coldStorage || []);
   const tbody = document.getElementById('invBody');
   if (inv.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding:20px;color:#94a3b8;">데이터 없음. 1.xlsx를 업로드하세요.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center" style="padding:20px;color:#94a3b8;">데이터 없음. 1.xlsx를 업로드하세요.</td></tr>';
     document.getElementById('invSummary').textContent = '';
   } else {
     tbody.innerHTML = inv.map(r => {
@@ -3754,6 +3766,7 @@ function renderInventory() {
       return `<tr>
       <td>${r.code}</td><td>${r.name}</td><td>${r.spec}</td>
       <td class="num">${r.systemQty}</td>
+      <td class="num">${r.systemQtyUsed}</td>
       <td class="num font-bold ${r.realQty <= 0 ? 'text-red' : 'text-blue'}">${r.realQty}</td>
       ${surplusCell}
       <td class="num font-bold" style="color:#dc2626;">${r.usage > 0 ? r.usage : '-'}</td>
@@ -3956,8 +3969,15 @@ function renderForecast() {
   const infoEl = document.getElementById('forecastInfo');
   const fu = state.forecastUsage;
 
+  // 재렌더 전 발주수량 입력값 스냅샷
+  tbody.querySelectorAll('.order-input').forEach(inp => {
+    const q = parseInt(inp.value, 10);
+    if (q > 0) orderDraft[inp.dataset.code] = q;
+    else if (inp.dataset.code) delete orderDraft[inp.dataset.code];
+  });
+
   if (forecast.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="13" class="text-center" style="padding:20px;color:#94a3b8;">대시보드에서 수요예측용 사용량 기간을 설정하고 파일을 업로드하세요.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="14" class="text-center" style="padding:20px;color:#94a3b8;">대시보드에서 수요예측용 사용량 기간을 설정하고 파일을 업로드하세요.</td></tr>';
     if (infoEl) infoEl.textContent = '';
     return;
   }
@@ -3988,23 +4008,32 @@ function renderForecast() {
   tbody.innerHTML = forecast.map(f => {
     const cls = f.status === 'shortage' ? 'text-red font-bold' : f.status === 'tight' ? 'text-blue' : '';
     const clsSys = f.diffSystem < 0 ? 'text-red font-bold' : f.diffSystem <= 2 ? 'text-blue' : '';
+    const draftVal = orderDraft[f.code];
     return `<tr>
       <td>${f.code}</td><td>${f.name}</td>
       <td class="num">${f.periodTotal}</td>
       <td class="num">${f.dailyAvg}</td>
       <td class="num">${f.monthlyAvg}</td>
       <td class="num">${f.systemStock}</td>
+      <td class="num">${f.systemStockUsed}</td>
       <td class="num stock-highlight">${f.currentStock}</td>
       <td class="num">${f.queryNeed || '-'}</td>
       <td class="num ${clsSys}">${f.diffSystem > 0 ? '+' : ''}${f.diffSystem}</td>
       <td class="num ${cls}">${f.diff > 0 ? '+' : ''}${f.diff}</td>
       <td>${f.status === 'shortage' ? '<span class="badge badge-red">부족</span>' : f.status === 'tight' ? '<span class="badge badge-yellow">주의</span>' : '<span class="badge badge-green">정상</span>'}</td>
-      <td><input type="number" class="order-input" data-code="${f.code}" data-barcode="${f.barcode}" min="0" value=""></td>
+      <td><input type="number" class="order-input" data-code="${f.code}" data-barcode="${f.barcode}" min="0" value="${draftVal > 0 ? draftVal : ''}"></td>
       <td class="text-center"><button class="btn btn-secondary btn-sm forecast-hide-btn" data-code="${f.code}" title="숨기기" style="padding:2px 6px;font-size:11px;">숨김</button></td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.forecast-hide-btn').forEach(btn => {
     btn.addEventListener('click', () => { hideDrug(btn.dataset.code); renderForecast(); });
+  });
+  tbody.querySelectorAll('.order-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const q = parseInt(inp.value, 10);
+      if (q > 0) orderDraft[inp.dataset.code] = q;
+      else delete orderDraft[inp.dataset.code];
+    });
   });
 
   // 숨긴 약품 카드
@@ -5398,6 +5427,7 @@ function clearAllData() {
     uploadDates: { f1:'', f2:'', f3:'', f4:'' }, dailyData: {}, coldStorage: [], hiddenDrugs: [],
     forecastUsage: { from:'', to:'', items:[] }, statsDeptOrder: []
   };
+  orderDraft = {};
   saveState();
   renderAll();
   toast('모든 데이터가 초기화되었습니다.', 'info');
@@ -5413,7 +5443,7 @@ function exportInventory() {
   if (inv.length === 0) { toast('내보낼 데이터가 없습니다.', 'error'); return; }
   const ws = XLSX.utils.json_to_sheet(inv.map(r => ({
     '약품코드': r.code, '물품명': r.name, '규격': r.spec,
-    '전산재고': r.systemQty, '실재고': r.realQty, '잉여합계': r.stockDiff,
+    '전산재고': r.systemQty, '전산재고(사용)': r.systemQtyUsed, '실재고': r.realQty, '잉여합계': r.stockDiff,
     '재고차이(PHS)': r.phsDiff, '잉여(자동)': r.autoSurplus, '잉여(수동)': r.manualSurplus,
     '단가': r.price
   })));
@@ -5430,7 +5460,7 @@ function exportForecast() {
   const ws = XLSX.utils.json_to_sheet(forecast.map(f => ({
     '약품코드': f.code, '약품명': f.name,
     '기간총사용량': f.periodTotal, '하루평균': f.dailyAvg, '월평균': f.monthlyAvg,
-    '전산재고': f.systemStock, '실재고': f.currentStock, '조회기간필요': f.queryNeed || '',
+    '전산재고': f.systemStock, '전산재고(사용)': f.systemStockUsed, '실재고': f.currentStock, '조회기간필요': f.queryNeed || '',
     '과부족(전산)': f.diffSystem, '과부족(실재고)': f.diff,
     '상태': f.status === 'shortage' ? '부족' : f.status === 'tight' ? '주의' : '정상'
   })));
@@ -6117,6 +6147,7 @@ function initInvResize() {
   let widths = null;
   if (savedWidths) {
     try { widths = JSON.parse(savedWidths); } catch(e) {}
+    if (Array.isArray(widths) && widths.length !== ths.length) widths = null;
   }
   ths.forEach((th, i) => {
     if (widths && widths[i]) {

@@ -8,6 +8,14 @@ Write-Host "프로젝트: pharmacy-inventory"
 Write-Host "URL: https://pharmacy-inventory-4pv.pages.dev"
 Write-Host ""
 
+# 이 머신의 CLOUDFLARE_API_TOKEN은 다른 계정으로 연결되어 있어
+# Pages 프로젝트 소유 계정의 저장된 Wrangler 자격증명을 우선 사용한다.
+if (Test-Path Env:CLOUDFLARE_API_TOKEN) {
+    Write-Host "CLOUDFLARE_API_TOKEN을 무시하고 Pages 저장 자격증명으로 배포합니다." -ForegroundColor Yellow
+    Remove-Item Env:CLOUDFLARE_API_TOKEN
+    Write-Host ""
+}
+
 # 로그인 확인
 $whoami = & "C:\Program Files\nodejs\npx.cmd" wrangler whoami 2>&1
 if ($whoami -match "not authenticated") {
