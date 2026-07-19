@@ -3460,7 +3460,8 @@ function getDemandForecast() {
       : (sysUsedInvByBarcode[item.code] !== undefined ? sysUsedInvByBarcode[item.code] : 0));
     const queryNeed = queryDays > 0 ? Math.ceil(dailyAvg * queryDays) : 0;
     const diff = queryDays > 0 ? currentStock - queryNeed : currentStock - Math.ceil(monthlyAvg);
-    const diffSystem = queryDays > 0 ? systemStock - queryNeed : systemStock - Math.ceil(monthlyAvg);
+    // 과부족(전산) = 전산재고(사용) - 필요량 (당일 사용량 반영)
+    const diffSystem = queryDays > 0 ? systemStockUsed - queryNeed : systemStockUsed - Math.ceil(monthlyAvg);
 
     results.push({
       code: item.code, barcode: barcodeMap[item.code] || barcodeMap[resolvedCode] || (/^\d+$/.test(item.code) ? item.code : '') || item.code, name: item.name,
