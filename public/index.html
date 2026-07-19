@@ -6264,9 +6264,10 @@ function exportInventoryCheck() {
     for (let i = 0; i < max; i++) {
       const l = left[i], r = right[i];
       html += '<tr>';
-      html += l ? `<td class="c">${l.name}</td><td class="c num">${l.systemQty}</td><td class="c num">${l.realQty}</td><td class="c num">${l.manualSurplus || ''}</td>` : '<td class="c"></td><td class="c num"></td><td class="c num"></td><td class="c num"></td>';
+      // 전산 = 전산재고(사용) = 전산 - 당일사용량 (재고조사 시 사용량 반영)
+      html += l ? `<td class="c">${l.name}</td><td class="c num">${l.systemQtyUsed}</td><td class="c num">${l.realQty}</td><td class="c num">${l.manualSurplus || ''}</td>` : '<td class="c"></td><td class="c num"></td><td class="c num"></td><td class="c num"></td>';
       html += '<td class="gap"></td>';
-      html += r ? `<td class="c">${r.name}</td><td class="c num">${r.systemQty}</td><td class="c num">${r.realQty}</td><td class="c num">${r.manualSurplus || ''}</td>` : '<td class="c"></td><td class="c num"></td><td class="c num"></td><td class="c num"></td>';
+      html += r ? `<td class="c">${r.name}</td><td class="c num">${r.systemQtyUsed}</td><td class="c num">${r.realQty}</td><td class="c num">${r.manualSurplus || ''}</td>` : '<td class="c"></td><td class="c num"></td><td class="c num"></td><td class="c num"></td>';
       html += '</tr>';
     }
     return html;
