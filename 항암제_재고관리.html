@@ -558,9 +558,9 @@ body.general-mode .text-blue { color:#16a34a; }
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;" id="statsViewToggle">
       <button class="stats-toggle-btn active" onclick="toggleStatsView('dept')">진료과별 통계</button>
       <button class="stats-toggle-btn" onclick="toggleStatsView('ampm')">조제통계 (오전/오후)</button>
-      <button class="stats-print-btn" onclick="exportStatsDeptExcel()" style="margin-left:12px;background:#0ea5e9;color:white;border-color:#0ea5e9;">엑셀 다운로드 (보고용 양식)</button>
+      <button class="stats-print-btn" onclick="exportStatsDeptExcel()" style="margin-left:12px;background:#0ea5e9;color:white;border-color:#0ea5e9;">엑셀 다운로드 (매트릭스+보고용)</button>
     </div>
-    <div style="font-size:11px;color:#64748b;margin-bottom:8px;">※ 보고용 양식(GS→GIC→IMH…)으로 다운로드. 진료과 순서는 아래 편집 설정이 반영됩니다.</div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:8px;">※ 시트1 처방건수매트릭스=화면과 동일 / 시트2 보고용양식(고정 60약품·GS→GIC…). 진료과 순서는 아래 편집 설정이 반영됩니다.</div>
     <!-- 진료과별 통계 섹션 -->
     <div id="statsViewDept">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -572,7 +572,7 @@ body.general-mode .text-blue { color:#16a34a; }
         <h4 style="font-size:13px;font-weight:700;margin-bottom:6px;color:#334155;">진료과별 요약</h4>
         <div id="statsDoctorTable"></div>
         <div id="deptReorderPanel" style="display:none;margin-top:6px;padding:6px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:12px;">
-          <div style="font-weight:600;margin-bottom:3px;color:#334155;">진료과 순서 편집 (보고용 엑셀 컬럼 순서)</div>
+          <div style="font-weight:600;margin-bottom:3px;color:#334155;">진료과 컬럼 순서 (화면·매트릭스 엑셀)</div>
           <div id="deptReorderList" style="line-height:1.4;"></div>
           <div style="margin-top:4px;display:flex;gap:6px;">
             <button onclick="saveDeptOrderEdit()" class="stats-print-btn" style="font-size:11px;">이 순서 저장</button>
@@ -971,7 +971,7 @@ const STATS_DRUG_ALIASES = {
 };
 const REPORT_DEPT_FALLBACK = {
   'OS':'OR','CV':'기타','TS':'기타','NS':'기타','IME':'기타','IMI':'기타',
-  'RH':'기타','OT':'기타','PD':'기타','HOSPICE':'기타','Hospice':'기타'
+  'RH':'기타','HOSPICE':'기타','Hospice':'기타'
 };
 
 // 처방의 → 진료과 코드 매핑 (PDF: 2026년 4월 진료과 교수별 담당 전담간호사)
@@ -1005,14 +1005,14 @@ const BUILTIN_DOCTOR_DEPT_MAP = {
   '임영화':'UR',
   // OS (정형외과)
   '임군일':'OS','김진영':'OS','이상형':'OS','양재준':'OS','박주현':'OS','최준영':'OS','이도원':'OS',
-  // OT (이비인후과)
+  // OT (안과)
   '오종현':'OT',
   // NR (신경과)
   '정상욱':'NR','박수련':'NR','김남희':'NR','곽동석':'NR','서지원':'NR',
   // RH (재활의학과)
   '김동억':'RH','김광기':'RH',
-  // 소아청소년과
-  '정석호':'PD',
+  // PED (소아청소년과)
+  '정석호':'PED',
   // 호스피스
   '오희근':'HOSPICE',
 };
@@ -1358,10 +1358,11 @@ const DEPT_NORMALIZE = {
   '외과':'GS','일반외과':'GS',
   '비뇨의학과':'UR','비뇨기과':'UR',
   '정형외과':'OS',
-  '이비인후과':'OT',
+  '안과':'OT',
+  '이비인후과':'OL',
   '신경과':'NR',
   '재활의학과':'RH','재활':'RH',
-  '소아청소년과':'PD','소아과':'PD',
+  '소아청소년과':'PED','소아과':'PED',
   '호스피스':'HOSPICE',
 };
 // 표준 진료과 코드 → 한글명
@@ -1369,35 +1370,42 @@ const BUILTIN_DEPT_NAMES = {
   'IMR':'호흡기내과','CV':'심혈관내과','IMH':'혈액종양내과','GIC':'소화기병센터',
   'IMN':'신장내과','IME':'내분비내과','IMI':'감염내과','IMJ':'류마티스내과',
   'TS':'흉부외과','NS':'신경외과','OG':'산부인과','GS':'외과','UR':'비뇨의학과',
-  'OS':'정형외과','OT':'이비인후과','NR':'신경과','RH':'재활의학과',
-  'PD':'소아청소년과','HOSPICE':'호스피스'
+  'OS':'정형외과','OT':'안과','OL':'이비인후과','NR':'신경과','RH':'재활의학과',
+  'PED':'소아청소년과','PD':'소아청소년과','HOSPICE':'호스피스'
 };
 function getActiveDoctorDeptMap() {
   if (state.doctorDeptMap && Object.keys(state.doctorDeptMap).length > 0) return state.doctorDeptMap;
   return BUILTIN_DOCTOR_DEPT_MAP;
 }
 function getAllDeptList() {
-  // 표준 + 커스텀 병합
-  var list = Object.keys(BUILTIN_DEPT_NAMES).map(function(c){ return {code:c, name:BUILTIN_DEPT_NAMES[c], builtin:true}; });
+  // 표준 + 커스텀 병합 (PD는 PED 별칭이므로 UI 목록에서 제외)
+  var list = Object.keys(BUILTIN_DEPT_NAMES)
+    .filter(function(c){ return c !== 'PD'; })
+    .map(function(c){ return {code:c, name:BUILTIN_DEPT_NAMES[c], builtin:true}; });
   (state.customDepts||[]).forEach(function(d){
     if (!list.some(function(x){ return x.code === d.code; })) list.push({code:d.code, name:d.name, builtin:false});
   });
   return list;
 }
+// 통계/캐시 진료과 키 정규화 (레거시 PD → PED)
+function normalizeStatsDeptKey(k) {
+  if (k === 'PD') return 'PED';
+  return k;
+}
 function getDeptCode(doctor, deptFallback) {
   var map = getActiveDoctorDeptMap();
   if (doctor && doctor.trim()) {
     var mapped = map[doctor.trim()];
-    if (mapped) return mapped;
+    if (mapped) return normalizeStatsDeptKey(mapped);
   }
   if (deptFallback && deptFallback.trim()) {
     var raw = deptFallback.trim();
     var upper = raw.toUpperCase();
-    // 표준 코드 목록에 이미 있으면 그대로
-    var stdCodes = ['IMR','CV','IMH','GIC','IMN','IME','IMI','IMJ','TS','NS','OG','GS','UR','OS','OT','NR','RH','PD','HOSPICE'];
-    if (stdCodes.indexOf(upper) >= 0) return upper;
+    // 표준 코드 목록에 이미 있으면 그대로 (PD는 PED로 정규화)
+    var stdCodes = ['IMR','CV','IMH','GIC','IMN','IME','IMI','IMJ','TS','NS','OG','GS','UR','OS','OT','OL','NR','RH','PD','PED','HOSPICE'];
+    if (stdCodes.indexOf(upper) >= 0) return normalizeStatsDeptKey(upper);
     // 한글명/변형 매핑
-    if (DEPT_NORMALIZE[raw]) return DEPT_NORMALIZE[raw];
+    if (DEPT_NORMALIZE[raw]) return normalizeStatsDeptKey(DEPT_NORMALIZE[raw]);
     return upper;
   }
   return '기타';
@@ -1609,7 +1617,7 @@ function applyStatsReportDesign(ws, opts) {
   var tpnRow = opts.tpnRow;
   var lastDataRow = opts.lastDataRow;
   var footerRow = opts.footerRow;
-  var lastCol = 12;
+  var lastCol = (opts.lastCol != null) ? opts.lastCol : 12;
   var thin = { style: 'thin', color: { rgb: '000000' } };
   var medium = { style: 'medium', color: { rgb: '000000' } };
   var headerFill = { patternType: 'solid', fgColor: { rgb: 'FFEEECE1' } };
@@ -1819,7 +1827,8 @@ function getMappedDeptFromEtcEntry(entry) {
   if (!doctor || doctor === '(처방의없음)') return '';
   var map = (state && state.doctorDeptMap) || {};
   var mapped = map[doctor];
-  return mapped && mapped !== '기타' ? mapped : '';
+  if (!mapped || mapped === '기타') return '';
+  return normalizeStatsDeptKey(mapped);
 }
 function remapCachedAggregateDepts(s) {
   if (!s || !s.depts || !s.depts['기타'] || !(s.etcDoctors || []).length) return s;
@@ -1835,7 +1844,11 @@ function remapCachedAggregateDepts(s) {
   var out = Object.assign({}, s);
   out.depts = {};
   Object.keys(s.depts).forEach(function(d) {
-    if (d !== '기타') out.depts[d] = { pts: s.depts[d].pts || 0, rx: s.depts[d].rx || 0 };
+    if (d === '기타') return;
+    var nk = normalizeStatsDeptKey(d);
+    if (!out.depts[nk]) out.depts[nk] = { pts: 0, rx: 0 };
+    out.depts[nk].pts += s.depts[d].pts || 0;
+    out.depts[nk].rx += s.depts[d].rx || 0;
   });
   if (!out.depts[target]) out.depts[target] = { pts: 0, rx: 0 };
   out.depts[target].pts += s.depts['기타'].pts || 0;
@@ -1844,7 +1857,11 @@ function remapCachedAggregateDepts(s) {
   Object.keys(s.drugDept || {}).forEach(function(name) {
     var src = s.drugDept[name] || {};
     var dst = {};
-    Object.keys(src).forEach(function(k) { dst[k] = src[k]; });
+    Object.keys(src).forEach(function(k) {
+      if (k === 'code') { dst.code = src.code; return; }
+      var nk = normalizeStatsDeptKey(k);
+      dst[nk] = (dst[nk] || 0) + (src[k] || 0);
+    });
     if (dst['기타']) {
       dst[target] = (dst[target] || 0) + dst['기타'];
       delete dst['기타'];
@@ -1968,7 +1985,14 @@ function renderStats() {
     +'<div class="stat-card" style="background:#fdf2f8;border:1px solid #fbcfe8;border-radius:8px;padding:10px 14px;"><div style="font-size:11px;color:#ec4899;font-weight:600;">데이터 행수</div><div style="font-size:22px;font-weight:800;color:#be185d;">'+(sumS.fMixRows+sumS.fOutRows)+'</div><div style="font-size:11px;color:#64748b;">입원 '+sumS.fMixRows+' / 외래 '+sumS.fOutRows+'</div></div>';
 
   // ── 진료과별 (집계 합산) ──
-  var depts = sumS.depts || {};
+  // 레거시 PD 키를 PED로 병합 (캐시/합산 경로 공통)
+  var depts = {};
+  Object.keys(sumS.depts || {}).forEach(function(d) {
+    var nk = normalizeStatsDeptKey(d);
+    if (!depts[nk]) depts[nk] = { pts: 0, rx: 0 };
+    depts[nk].pts += (sumS.depts[d].pts || 0);
+    depts[nk].rx += (sumS.depts[d].rx || 0);
+  });
   var preferredOrder = getPreferredDeptOrder();
   var deptKeys = getOrderedDepts(depts, preferredOrder);
   var deptHtml = '<table class="stats-bordered"><thead><tr><th>진료과</th><th style="text-align:right">환자</th><th style="text-align:right">처방</th></tr></thead><tbody>';
@@ -1990,7 +2014,7 @@ function renderStats() {
   }
 
   // ── 약품 × 진료과 매트릭스 (집계 합산) ──
-  // 서버 캐시의 옛 키를 현재 cleanDrugName으로 재정규화 (중복 병합)
+  // 서버 캐시의 옛 키를 현재 cleanDrugName + PD→PED로 재정규화 (중복 병합)
   var rawDrugDept = sumS.drugDept || {};
   var drugDept = {};
   Object.keys(rawDrugDept).forEach(function(cn){
@@ -1999,7 +2023,8 @@ function renderStats() {
     if (!drugDept[norm]) drugDept[norm] = { code: rawDrugDept[cn].code };
     Object.keys(rawDrugDept[cn]).forEach(function(k){
       if (k === 'code') return;
-      drugDept[norm][k] = (drugDept[norm][k]||0) + (rawDrugDept[cn][k]||0);
+      var deptKey = normalizeStatsDeptKey(k);
+      drugDept[norm][deptKey] = (drugDept[norm][deptKey]||0) + (rawDrugDept[cn][k]||0);
     });
   });
   var usedDepts = {};
@@ -2163,19 +2188,21 @@ function sumDailyStats(statsArr) {
     ['amP','amR','pmP','pmR','inP','inR','outP','outR','outAmP','outAmR','outPmP','outPmR','fMixRows','fOutRows'].forEach(function(k){
       sum[k] += (s[k]||0);
     });
-    // depts 합산
+    // depts 합산 (PD→PED 병합)
     Object.keys(s.depts || {}).forEach(function(d){
-      if (!sum.depts[d]) sum.depts[d] = { pts:0, rx:0 };
-      sum.depts[d].pts += s.depts[d].pts || 0;
-      sum.depts[d].rx += s.depts[d].rx || 0;
+      var dk = normalizeStatsDeptKey(d);
+      if (!sum.depts[dk]) sum.depts[dk] = { pts:0, rx:0 };
+      sum.depts[dk].pts += s.depts[d].pts || 0;
+      sum.depts[dk].rx += s.depts[d].rx || 0;
     });
-    // drugDept 합산
+    // drugDept 합산 (PD→PED 병합)
     Object.keys(s.drugDept || {}).forEach(function(cn){
       var src = s.drugDept[cn];
       if (!sum.drugDept[cn]) sum.drugDept[cn] = { code: src.code };
       Object.keys(src).forEach(function(k){
         if (k === 'code') return;
-        sum.drugDept[cn][k] = (sum.drugDept[cn][k]||0) + (src[k]||0);
+        var dk = normalizeStatsDeptKey(k);
+        sum.drugDept[cn][dk] = (sum.drugDept[cn][dk]||0) + (src[k]||0);
       });
     });
     // drugDetail 합산
@@ -4718,6 +4745,10 @@ function ensureDoctorDeptMapInit() {
   if (!state.doctorDeptMap || Object.keys(state.doctorDeptMap).length === 0) {
     state.doctorDeptMap = Object.assign({}, BUILTIN_DOCTOR_DEPT_MAP);
   }
+  // 레거시 PD → PED 마이그레이션 (설정 UI 그룹과 일치)
+  Object.keys(state.doctorDeptMap).forEach(function(doc) {
+    if (state.doctorDeptMap[doc] === 'PD') state.doctorDeptMap[doc] = 'PED';
+  });
   if (!state.customDepts) state.customDepts = [];
 }
 function renderDeptDoctorList() {
@@ -4725,11 +4756,11 @@ function renderDeptDoctorList() {
   if (!el) return;
   ensureDoctorDeptMapInit();
   var depts = getAllDeptList();
-  // 의사를 진료과별로 그룹핑
+  // 의사를 진료과별로 그룹핑 (PD→PED 정규화)
   var byDept = {};
   depts.forEach(function(d){ byDept[d.code] = []; });
   Object.keys(state.doctorDeptMap).forEach(function(doc){
-    var dc = state.doctorDeptMap[doc];
+    var dc = normalizeStatsDeptKey(state.doctorDeptMap[doc]);
     if (!byDept[dc]) byDept[dc] = [];
     byDept[dc].push(doc);
   });
@@ -5449,7 +5480,43 @@ function exportStatsDeptExcel() {
 
     var sd = getStatsData();
     var mix = sd.mix || [], out = sd.out || [];
-    if (mix.length === 0 && out.length === 0) {
+    var label = (sd && sd.label) ? sd.label : today();
+
+    // 화면 renderStats와 동일: 일별 집계 합산 → cleanDrugName + getDeptCode 매트릭스
+    var statDates = [];
+    var monthEl = document.getElementById('statsMonth');
+    var ym = monthEl ? monthEl.value : '';
+    if (_statsPeriod === 'monthly' && ym) {
+      var p = ym.split('-'); var year = parseInt(p[0], 10), month = parseInt(p[1], 10);
+      var dim = new Date(year, month, 0).getDate();
+      for (var dd = 1; dd <= dim; dd++) {
+        statDates.push(year + '-' + String(month).padStart(2, '0') + '-' + String(dd).padStart(2, '0'));
+      }
+    } else if (_statsPeriod === 'custom') {
+      var fEl = document.getElementById('statsDateFrom'), tEl = document.getElementById('statsDateTo');
+      if (fEl && tEl && fEl.value && tEl.value) {
+        var cur = parseLocalYmd(fEl.value), end = parseLocalYmd(tEl.value);
+        while (cur <= end) {
+          statDates.push(cur.getFullYear() + '-' + String(cur.getMonth() + 1).padStart(2, '0') + '-' + String(cur.getDate()).padStart(2, '0'));
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
+    }
+    if (statDates.length === 0 && sd.perDate) {
+      statDates = Object.keys(sd.perDate);
+    }
+    var perDayStats = [];
+    statDates.forEach(function(date) {
+      var agg = getDailyAggregateForDate(date, sd.perDate);
+      if (agg) perDayStats.push(agg);
+    });
+    var sumS = null;
+    if (perDayStats.length > 0) {
+      sumS = sumDailyStats(perDayStats);
+    } else if (mix.length > 0 || out.length > 0) {
+      sumS = buildDailyStatsFull(mix, out);
+    }
+    if (!sumS || Object.keys(sumS.drugDept || {}).length === 0) {
       var msg = '내볼 통계 데이터가 없습니다.\n\n' +
                 '• "진료과별 통계" 토글 버튼이 선택(활성)되어 있는지 확인하세요.\n' +
                 '• 3.xlsx(입원MIX) 또는 4.xlsx(외래집계)를 업로드했는지 확인.\n' +
@@ -5460,119 +5527,159 @@ function exportStatsDeptExcel() {
       return;
     }
 
-    var fMix = mix.filter(function(r){ return !isVehicle(r.code); });
-    var fOut = out.filter(function(r){ return !isVehicle(r.code); });
+    // 화면과 동일: cleanDrugName 재정규화 + getOrderedDepts + PD→PED
+    var rawDrugDept = sumS.drugDept || {};
     var drugDept = {};
+    Object.keys(rawDrugDept).forEach(function(cn) {
+      var norm = cleanDrugName(cn);
+      if (!norm) norm = cn;
+      if (!drugDept[norm]) drugDept[norm] = { code: rawDrugDept[cn].code };
+      Object.keys(rawDrugDept[cn]).forEach(function(k) {
+        if (k === 'code') return;
+        var deptKey = normalizeStatsDeptKey(k);
+        drugDept[norm][deptKey] = (drugDept[norm][deptKey] || 0) + (rawDrugDept[cn][k] || 0);
+      });
+    });
+    var usedDepts = {};
+    Object.keys(drugDept).forEach(function(cn) {
+      Object.keys(drugDept[cn]).forEach(function(k) { if (k !== 'code') usedDepts[k] = 1; });
+    });
+    var drugKeys = Object.keys(drugDept).sort();
+    var preferredOrder = getPreferredDeptOrder();
+    var activeDepts = getOrderedDepts(usedDepts, preferredOrder);
+    if (drugKeys.length === 0) {
+      if (typeof toast === 'function') toast('매트릭스에 표시할 약품 데이터가 없습니다.', 'error');
+      else alert('매트릭스에 표시할 약품 데이터가 없습니다.');
+      return;
+    }
+
+    var matrixTitle = '약품별 x 진료과 매트릭스 (처방건수) - ' + label;
+    var colTotals = {};
+    activeDepts.forEach(function(d) { colTotals[d] = 0; });
+    var grandTotal = 0;
+    var matrixAoa = [];
+    matrixAoa.push([matrixTitle]);
+    matrixAoa.push(['약품명'].concat(activeDepts).concat(['합계']));
+    drugKeys.forEach(function(dn) {
+      var row = [dn];
+      var rowTotal = 0;
+      activeDepts.forEach(function(d) {
+        var cnt = drugDept[dn][d] || 0;
+        row.push(cnt > 0 ? cnt : '');
+        rowTotal += cnt;
+        colTotals[d] += cnt;
+      });
+      grandTotal += rowTotal;
+      row.push(rowTotal);
+      matrixAoa.push(row);
+    });
+    var totalRow = ['합계'];
+    activeDepts.forEach(function(d) { totalRow.push(colTotals[d]); });
+    totalRow.push(grandTotal);
+    matrixAoa.push(totalRow);
+
+    var wb = XLSX.utils.book_new();
+    var wsMatrix = XLSX.utils.aoa_to_sheet(matrixAoa);
+    var matrixLastCol = activeDepts.length + 1; // 약품 + 진료과들 + 합계
+    var matrixTotalRow0 = drugKeys.length + 2; // 0-based: title(0), header(1), data..., total
+    applyStatsReportDesign(wsMatrix, {
+      lastDataRow: drugKeys.length + 2, // 1-based last data row before total
+      totalRow: matrixTotalRow0,
+      tpnRow: matrixTotalRow0,
+      footerRow: matrixTotalRow0,
+      lastCol: matrixLastCol
+    });
+    XLSX.utils.book_append_sheet(wb, wsMatrix, '처방건수매트릭스');
+
+    // ── 2차 시트: 보고용 양식 (고정 60약품 × DEFAULT_STATS_DEPT_ORDER) ──
+    // 기간 집계는 매트릭스와 동일: drugDept (cleanDrugName + PD→PED 재정규화 후)
+    // → 월별/커스텀에서도 화면·시트1과 같은 기간 커버리지 보장
+    var reportDrugDept = {}; // drug → dept → number
     var unmappedDrugs = {};
-    fMix.concat(fOut).forEach(function(r){
-      var cname = normalizeStatsDrugName(r.name);
+
+    function mapToReportDept(code) {
+      var c = normalizeStatsDeptKey(code);
+      if (DEFAULT_STATS_DEPT_ORDER.indexOf(c) >= 0) return c;
+      return REPORT_DEPT_FALLBACK[c] || '기타';
+    }
+    function addReportCnt(drug, dept, n) {
+      if (!reportDrugDept[drug]) reportDrugDept[drug] = {};
+      reportDrugDept[drug][dept] = (reportDrugDept[drug][dept] || 0) + (n || 0);
+    }
+
+    Object.keys(drugDept).forEach(function(cn) {
+      var cname = normalizeStatsDrugName(cn);
       if (!cname) {
-        var fallback = cleanDrugName(r.name) || String(r.name || '').trim();
-        if (fallback) unmappedDrugs[fallback] = 1;
+        unmappedDrugs[cn] = 1;
         return;
       }
-      var dept = getReportDeptCode(r.doctor, r.dept);
-      if (!drugDept[cname]) drugDept[cname] = {};
-      if (!drugDept[cname][dept]) drugDept[cname][dept] = new Set();
-      drugDept[cname][dept].add(getRxBundleKey(r));
+      Object.keys(drugDept[cn]).forEach(function(k) {
+        if (k === 'code') return;
+        addReportCnt(cname, mapToReportDept(k), drugDept[cn][k] || 0);
+      });
     });
 
-    var activeDepts = getPreferredDeptOrder();
-    var label = (sd && sd.label) ? sd.label : today();
-    var title = formatStatsReportTitle(label);
+    var reportDepts = DEFAULT_STATS_DEPT_ORDER.slice();
+    var reportTitle = formatStatsReportTitle(label);
     var firstDataRow = 3;
     var lastDataRow = firstDataRow + DEFAULT_STATS_DRUG_ORDER.length - 1;
     var totalRowNum = lastDataRow + 1;
     var tpnRowNum = totalRowNum + 1;
     var footerRowNum = tpnRowNum + 2;
-    var sumFirstCol = XLSX.utils.encode_col(1);
-    var sumLastCol = XLSX.utils.encode_col(activeDepts.length);
-    var outRxKeys = {};
-    fOut.forEach(function(r) { outRxKeys[getRxBundleKey(r)] = 1; });
-    var outRxCount = Object.keys(outRxKeys).length;
-
-    function fillWorksheet(ws) {
-      function setCell(addr, val, isFormula) {
-        var prev = ws[addr];
-        var prevS = prev && prev.s;
-        var cell;
-        if (isFormula) {
-          cell = { f: val, t: 'n' };
-        } else if (val === null || val === undefined || val === '') {
-          cell = { t: 'z' };
-        } else {
-          cell = { v: val, t: typeof val === 'number' ? 'n' : 's' };
-        }
-        if (prevS) cell.s = prevS;
-        ws[addr] = cell;
-      }
-
-      setCell('A1', title, false);
-      activeDepts.forEach(function(d, i) {
-        setCell(XLSX.utils.encode_col(i + 1) + '2', d, false);
-      });
-      setCell('M2', '합계', false);
-
-      DEFAULT_STATS_DRUG_ORDER.forEach(function(drug, idx) {
-        var excelRow = firstDataRow + idx;
-        setCell('A' + excelRow, drug, false);
-        activeDepts.forEach(function(d, i) {
-          var cnt = (drugDept[drug] && drugDept[drug][d]) ? drugDept[drug][d].size : 0;
-          setCell(XLSX.utils.encode_col(i + 1) + excelRow, cnt > 0 ? cnt : null, false);
-        });
-        setCell('M' + excelRow, 'SUM(' + sumFirstCol + excelRow + ':' + sumLastCol + excelRow + ')', true);
-      });
-
-      setCell('A' + totalRowNum, 'TOTAL', false);
-      activeDepts.forEach(function(d, i) {
-        var col = XLSX.utils.encode_col(i + 1);
-        setCell(col + totalRowNum, 'SUM(' + col + firstDataRow + ':' + col + lastDataRow + ')', true);
-      });
-      setCell('M' + totalRowNum, 'SUM(' + sumFirstCol + totalRowNum + ':' + sumLastCol + totalRowNum + ')', true);
-
-      setCell('A' + tpnRowNum, '특수TPN', false);
-      setCell('B' + tpnRowNum, 0, false);
-      for (var ti = 1; ti < activeDepts.length; ti++) {
-        setCell(XLSX.utils.encode_col(ti + 1) + tpnRowNum, null, false);
-      }
-      setCell('M' + tpnRowNum, 'SUM(' + sumFirstCol + tpnRowNum + ':' + sumLastCol + tpnRowNum + ')', true);
-      setCell('A' + footerRowNum, '외래주사실 :', false);
-      setCell('B' + footerRowNum, outRxCount > 0 ? (outRxCount + '건 ') : '', false);
-      applyStatsReportDesign(ws, {
-        lastDataRow: lastDataRow,
-        totalRow: totalRowNum - 1,
-        tpnRow: tpnRowNum - 1,
-        footerRow: footerRowNum - 1
-      });
+    var reportLastCol = reportDepts.length + 1;
+    // 외래주사실: raw out 있으면 고유 처방 건수, 없으면 합산 outR
+    var fOut = (out || []).filter(function(r) { return !isVehicle(r.code); });
+    var outRxCount = 0;
+    if (fOut.length > 0) {
+      var outRxKeys = {};
+      fOut.forEach(function(r) { outRxKeys[getRxBundleKey(r)] = 1; });
+      outRxCount = Object.keys(outRxKeys).length;
+    } else {
+      outRxCount = sumS.outR || 0;
     }
 
-    var aoa = [];
-    aoa.push([title]);
-    aoa.push([''].concat(activeDepts).concat(['합계']));
+    var reportAoa = [];
+    reportAoa.push([reportTitle]);
+    reportAoa.push([''].concat(reportDepts).concat(['합계']));
+    var reportColTotals = {};
+    reportDepts.forEach(function(d) { reportColTotals[d] = 0; });
+    var reportGrand = 0;
     DEFAULT_STATS_DRUG_ORDER.forEach(function(drug) {
       var row = [drug];
-      activeDepts.forEach(function(d) {
-        var cnt = (drugDept[drug] && drugDept[drug][d]) ? drugDept[drug][d].size : 0;
+      var rowTotal = 0;
+      reportDepts.forEach(function(d) {
+        var cnt = (reportDrugDept[drug] && reportDrugDept[drug][d]) ? reportDrugDept[drug][d] : 0;
         row.push(cnt > 0 ? cnt : '');
+        rowTotal += cnt;
+        reportColTotals[d] += cnt;
       });
-      row.push(null);
-      aoa.push(row);
+      reportGrand += rowTotal;
+      row.push(rowTotal);
+      reportAoa.push(row);
     });
-    aoa.push(['TOTAL'].concat(new Array(activeDepts.length).fill(null)).concat([null]));
-    aoa.push(['특수TPN', 0].concat(new Array(activeDepts.length - 1).fill('')).concat([null]));
-    aoa.push(new Array(activeDepts.length + 2).fill(''));
-    aoa.push(['외래주사실 :', ''].concat(new Array(activeDepts.length).fill('')));
-    var wb = XLSX.utils.book_new();
-    var ws = XLSX.utils.aoa_to_sheet(aoa);
-    fillWorksheet(ws);
-    XLSX.utils.book_append_sheet(wb, ws, '항암제');
+    var rTotal = ['TOTAL'];
+    reportDepts.forEach(function(d) { rTotal.push(reportColTotals[d]); });
+    rTotal.push(reportGrand);
+    reportAoa.push(rTotal);
+    reportAoa.push(['특수TPN', 0].concat(new Array(reportDepts.length - 1).fill('')).concat([0]));
+    reportAoa.push(new Array(reportDepts.length + 2).fill(''));
+    reportAoa.push(['외래주사실 :', outRxCount > 0 ? (outRxCount + '건 ') : ''].concat(new Array(reportDepts.length).fill('')));
+
+    var wsReport = XLSX.utils.aoa_to_sheet(reportAoa);
+    applyStatsReportDesign(wsReport, {
+      lastDataRow: lastDataRow,
+      totalRow: totalRowNum - 1,
+      tpnRow: tpnRowNum - 1,
+      footerRow: footerRowNum - 1,
+      lastCol: reportLastCol
+    });
+    XLSX.utils.book_append_sheet(wb, wsReport, '보고용양식');
+
     XLSX.writeFile(wb, formatStatsReportFilename(label), { cellStyles: true });
     if (Object.keys(unmappedDrugs).length > 0) {
       console.warn('exportStatsDeptExcel: unmapped drugs (not in 60-row template):', Object.keys(unmappedDrugs).sort());
-      var um = '보고용 양식 60개 약품 외 ' + Object.keys(unmappedDrugs).length + '개는 엑셀 행에 없음 (화면 통계에는 포함)';
-      if (typeof toast === 'function') toast(um, 'warning');
     }
-    if (typeof toast === 'function') toast('보고용 양식 엑셀 다운로드 완료', 'success');
+    if (typeof toast === 'function') toast('통계 엑셀 다운로드 완료 (처방건수매트릭스=화면 동일 기간 + 보고용양식)', 'success');
     else alert('다운로드 완료: ' + formatStatsReportFilename(label));
   } catch (e) {
     console.error('exportStatsDeptExcel error:', e);
