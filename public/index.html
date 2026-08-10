@@ -4845,7 +4845,7 @@ function renderZeroDrugList() {
     });
   });
 
-  // 전산재고(사용) 맵 — 대표코드 + barcode fallback (수요예측과 동일)
+  // 현재고(전산) = systemQtyUsed 맵 — 대표코드 + barcode fallback
   const sysUsedMap = {};
   try {
     getRealInventory().forEach(r => {
@@ -4883,7 +4883,7 @@ function renderZeroDrugList() {
   html += '<th>마지막투여일</th>';
   html += '<th>기간필요</th>';
   html += '<th>약품합계</th>';
-  html += '<th>전산재고(사용)</th>';
+  html += '<th>현재고(전산)</th>';
   html += '</tr></thead><tbody>';
 
   groupList.forEach(g => {
