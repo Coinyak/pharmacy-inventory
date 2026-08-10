@@ -4416,6 +4416,10 @@ function autoAdvanceCycle(z) {
   const lastEntry = resolved[resolved.length - 1];
   const lastStr = lastEntry.date;
   if (todayStr <= lastStr) return false; // 아직 이번 주기 마지막 날 안 지남
+  // 실제 마지막 투여일 보존 (donedays 비워도 리스트에 표시)
+  if (lastStr && (!z.lastAdminDate || lastStr > z.lastAdminDate)) {
+    z.lastAdminDate = lastStr;
+  }
   z.lastDate = z.nextDate;
   // 다음 주기 D1 = 실제 마지막 투여일 + (cycleDays - (dayNum - 1))
   // → 마지막 투여 요일이 그대로 주기 리듬에 반영됨
@@ -4447,6 +4451,11 @@ function checkInDay(id, dayNum) {
   if (z.donedays.includes(dayNum)) return; // 이미 투여됨
   z.donedays.push(dayNum);
   z.donedays.sort((a,b) => a - b);
+  // 마지막 투여일 기록 (주기 전환 후에도 표시)
+  const adminDate = getDayDate(z, dayNum);
+  if (adminDate && (!z.lastAdminDate || adminDate > z.lastAdminDate)) {
+    z.lastAdminDate = adminDate;
+  }
 
   const allDays = getDayList(z);
   const allDone = allDays.every(d => z.donedays.includes(d));
@@ -4681,8 +4690,10 @@ function countQtyInPeriod(z, startYmd, endYmd) {
   return doseCount * qty;
 }
 
-// 마지막 투여일: 현재 주기에서 완료(donedays)된 Day 중 최신 날짜만.
-// donedays 비면 '' (UI에서 '-') — lastDate 추정은 신규 등록 시 가짜 과거일을 만들어내므로 사용 안 함.
+// 마지막 투여일:
+//  1) 현재 주기 완료 Day 중 최신
+//  2) 체크인 시 저장한 lastAdminDate (주기 전환 후 donedays 비어도 유지)
+//  3) lastDate 기준 이전 주기 마지막 Day 추정 (기존 데이터/달력 주기 전환 호환)
 function getLastAdminDate(z) {
   if (!z) return '';
   const done = z.donedays || [];
@@ -4691,7 +4702,18 @@ function getLastAdminDate(z) {
     const d = getDayDate(z, dn);
     if (d && d > latest) latest = d;
   });
-  return latest || '';
+  if (latest) return latest;
+  if (z.lastAdminDate) return z.lastAdminDate;
+  // 주기 전환 후 donedays 비면 lastDate(이전 주기 D1) 기준 마지막 Day 추정
+  if (z.lastDate) {
+    const dayList = getDayList(z);
+    const maxOff = dayList.length ? Math.max.apply(null, dayList) - 1 : 0;
+    if (maxOff <= 0) return z.lastDate;
+    const d = parseLocalYmd(z.lastDate);
+    d.setDate(d.getDate() + maxOff);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  return '';
 }
 
 // skipRender=true: DOM 동기화만 (resetAllState 등 데이터 비운 직후)
@@ -6535,6 +6557,10 @@ function calToggleDose(patient, drugName, dayNum, isDone, isPast, pastCycleDate)
       toast(patient + ' D' + dayNum + ' 투여 취소', 'info');
     } else {
       if (!z.donedays.includes(dayNum)) z.donedays.push(dayNum);
+      const adminDate = getDayDate(z, dayNum);
+      if (adminDate && (!z.lastAdminDate || adminDate > z.lastAdminDate)) {
+        z.lastAdminDate = adminDate;
+      }
       toast(patient + ' D' + dayNum + ' 투여 완료!', 'success');
       // 이번 주기 마지막 날 지나 있으면 즉시 다음 주기로 이동
       autoAdvanceCycle(z);
