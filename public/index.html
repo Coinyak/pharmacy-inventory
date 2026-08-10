@@ -229,6 +229,34 @@ td.stock-highlight { background:#fefce8; font-weight:700; }
 .zcal .cal-item .ci-qty { color:#dc2626; font-weight:700; }
 .zcal td.move-target { background:#dbeafe !important; cursor:pointer; }
 .zcal td.move-target:hover { background:#bfdbfe !important; }
+/* 제로관리약 약품 리스트 뷰 — separate로 sticky 헤더 보더 유지 */
+.zero-drug-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+.zero-drug-table th,
+.zero-drug-table td {
+  border-right:1.5px solid #1e293b;
+  border-bottom:1.5px solid #1e293b;
+  padding:3px 6px;
+  line-height:1.3;
+  vertical-align:middle;
+}
+.zero-drug-table th:first-child,
+.zero-drug-table td:first-child { border-left:1.5px solid #1e293b; }
+.zero-drug-table thead tr:first-child th { border-top:1.5px solid #1e293b; }
+.zero-drug-table th {
+  background:#f1f5f9;
+  font-weight:700;
+  text-align:center;
+  position:sticky; top:0; z-index:2;
+  box-shadow:0 1.5px 0 #1e293b;
+}
+.zero-drug-table td.num { text-align:right; }
+.zero-drug-table td.drug-name { font-weight:700; color:#1e40af; vertical-align:top; min-width:120px; }
+.zero-drug-table td.total { font-weight:700; text-align:right; background:#f8fafc; }
+.zero-drug-table-wrap { max-height:min(70vh, 640px); overflow:auto; }
+@media(max-width:600px) {
+  .zero-drug-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .zero-drug-table { min-width:640px; }
+}
 .cal-move-banner { background:#3b82f6; color:#fff; padding:8px 16px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; }
 .cal-move-banner button { background:#fff; color:#3b82f6; border:none; border-radius:4px; padding:4px 12px; cursor:pointer; font-weight:600; font-size:12px; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
@@ -699,14 +727,17 @@ body.general-mode .text-blue { color:#16a34a; }
   <div class="card">
     <div class="flex-between mb-8">
       <h3 style="border:none;padding:0;margin:0;">스케줄 현황</h3>
-      <div class="flex gap-8">
-        <input type="text" id="zeroSearch" placeholder="환자명/약품명 검색" oninput="renderZeroDrugs()">
-        <button class="btn btn-secondary btn-sm" id="zeroSortBtn" onclick="toggleZeroSort()" title="정렬 방식 전환">날짜순</button>
-        <button class="btn btn-secondary btn-sm" id="zeroViewToggle" onclick="toggleZeroView()">목록</button>
+      <div class="flex gap-8" style="align-items:center;flex-wrap:wrap;">
+        <input type="text" id="zeroSearch" placeholder="환자명/약품명/등록번호 검색" oninput="renderZeroDrugs()">
+        <button class="btn btn-secondary btn-sm" id="zeroSortBtn" onclick="toggleZeroSort()" title="정렬 방식 전환" style="display:none;">날짜순</button>
+        <button class="btn btn-primary btn-sm" id="zeroViewCal" onclick="setZeroViewMode('calendar')">달력</button>
+        <button class="btn btn-secondary btn-sm" id="zeroViewList" onclick="setZeroViewMode('list')">목록</button>
+        <button class="btn btn-secondary btn-sm" id="zeroViewDrugList" onclick="setZeroViewMode('druglist')">리스트</button>
       </div>
     </div>
     <div id="zeroList" style="display:none;"></div>
     <div id="zeroCalendar"></div>
+    <div id="zeroDrugList" style="display:none;"></div>
   </div>
 </div>
 
@@ -2635,9 +2666,15 @@ function resetAllState() {
   // 4) 제로관리약 UI
   _renderingZero = false;
   zeroSortMode = 'date';
-  calViewActive = true;
+  zeroDrugPeriodStart = '';
+  zeroDrugPeriodEnd = '';
   var d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth();
   _moveData = null;
+  // 뷰 모드 DOM 동기화 (컨테이너/버튼/정렬 버튼) — 렌더는 skip (데이터 비움 직후)
+  var _zSortBtn = document.getElementById('zeroSortBtn');
+  if (_zSortBtn) _zSortBtn.textContent = '날짜순';
+  if (typeof setZeroViewMode === 'function') setZeroViewMode('calendar', true);
+  else zeroViewMode = 'calendar';
   // 5) 설정 탭
   _masterType = '항암제';
   _drugListCache = [];
@@ -4209,6 +4246,36 @@ function getZeroAlerts() {
   return out.sort((a,b) => a.daysLeft - b.daysLeft);
 }
 
+// 현재 주기에서 투약 예정일이 지났지만 미투여인 Day가 있는지
+function hasOverdueDose(z) {
+  if (!z) return false;
+  const todayStr = today();
+  const done = z.donedays || [];
+  return getDayList(z).some(dn => {
+    if (done.includes(dn)) return false;
+    const d = getDayDate(z, dn);
+    return d && d < todayStr;
+  });
+}
+
+// 기간 시작일 이전에 있는 현재 주기 미투여·경과 Day 필요량 (기간필요에 합산)
+// countQtyInPeriod는 기간 내 날짜만 세므로, 4주/8주 프리셋(start=today)에서
+// 지난 미투약이 빠지지 않도록 보완. 완료(donedays)된 과거 Day는 제외.
+// d < today() 조건: 미래 custom period start 시 아직 안 지난 Day를 과대계상하지 않음.
+function countOverdueNeedOutsidePeriod(z, startYmd) {
+  if (!z || !startYmd) return 0;
+  const todayStr = today();
+  const done = z.donedays || [];
+  const qty = z.qty || 1;
+  let count = 0;
+  getDayList(z).forEach(dn => {
+    if (done.includes(dn)) return;
+    const d = getDayDate(z, dn);
+    if (d && d < todayStr && d < startYmd) count++;
+  });
+  return count * qty;
+}
+
 // 목록 표시용: 오늘 이후 가장 가까운 투여일 (없으면 nextDate)
 function getEffectiveNextDate(z) {
   const todayStr = (function(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
@@ -4268,16 +4335,9 @@ function addZeroDrug() {
     toast('환자명, 약품, 투여시작일을 모두 입력하세요.', 'error'); return;
   }
   // 입력 날짜 = 이번 주기 D1 시작일
-  const tmpDayList = getDayList({ dayType, dayEnd, dayPick });
-  const todayStr = today();
+  // 지난 Day 자동 완료 제거 → 미투약은 알람/필요수량에 남김 (migrateZeroDrugDonedays 정책과 동일)
   const prev = parseLocalYmd(lastDate); prev.setDate(prev.getDate() - cycle * 7);
   const actualLast = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
-  const donedays = [];
-  tmpDayList.forEach(dn => {
-    const dt = parseLocalYmd(lastDate); dt.setDate(dt.getDate() + (dn - 1));
-    const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    if (dStr <= todayStr) donedays.push(dn);
-  });
   state.zeroDrugs.push({
     id: Date.now(),
     patient, regNo,
@@ -4288,7 +4348,7 @@ function addZeroDrug() {
     dayType, dayEnd, dayPick,
     lastDate: actualLast,
     nextDate: lastDate,
-    donedays,
+    donedays: [],
     pastUndone: [],
     _zv2: true
   });
@@ -4479,19 +4539,21 @@ function saveEditDrug(id) {
   z.dayEnd = parseInt(document.getElementById('ede-' + id).value) || 1;
   z.dayPick = document.getElementById('edp-' + id).value.trim();
   // 입력값 = 이번 주기 D1 시작일
+  const prevNext = z.nextDate;
   const startDate = document.getElementById('eld-' + id).value || z.nextDate || z.lastDate;
   z.nextDate = startDate;
   const prev = parseLocalYmd(startDate); prev.setDate(prev.getDate() - z.cycleWeeks * 7);
   z.lastDate = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
-  // 오늘까지 지난 Day는 자동 완료
-  const todayStr = today();
-  const dl = getDayList(z);
-  z.donedays = [];
-  dl.forEach(dn => {
-    const dt = parseLocalYmd(startDate); dt.setDate(dt.getDate() + (dn - 1));
-    const dStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    if (dStr <= todayStr) z.donedays.push(dn);
-  });
+  // 시작일 변경 시 이전 주기 완료 플래그는 무효 → 초기화.
+  // 시작일 동일(dayType/dayEnd/dayPick만 변경)이면 새 dayList에 남는 체크만 유지.
+  // 지난 Day 자동 완료 없음. Number 정규화로 string/number 혼재 방지.
+  const newDayList = getDayList(z);
+  if (startDate !== prevNext) {
+    z.donedays = [];
+  } else {
+    const prevDone = z.donedays || [];
+    z.donedays = prevDone.map(Number).filter(dn => !Number.isNaN(dn) && newDayList.includes(dn));
+  }
   z.pastUndone = [];
   z.dayDates = {};
   z._zv2 = true;
@@ -4549,20 +4611,322 @@ function savePatientMemo(firstId, patient, regNo) {
 
 let _renderingZero = false;
 let zeroSortMode = 'date'; // 'date' | 'drug'
+let zeroViewMode = 'calendar'; // 'calendar' | 'list' | 'druglist'
+let zeroDrugPeriodStart = '';
+let zeroDrugPeriodEnd = '';
+
 function toggleZeroSort() {
   zeroSortMode = zeroSortMode === 'date' ? 'drug' : 'date';
   const btn = document.getElementById('zeroSortBtn');
   if (btn) btn.textContent = zeroSortMode === 'drug' ? '약품명순' : '날짜순';
   renderZeroDrugs();
 }
+
+// 기간 내 투여 횟수 * 개수
+// anchor(nextDate||lastDate)에서 양방향 주기 순회. maxCycles는 anchor↔기간 거리 기준.
+// 현재 주기(c===0, anchor===nextDate)는 dayDates 오버라이드를 getDayDate로 반영.
+function countQtyInPeriod(z, startYmd, endYmd) {
+  if (!z || !startYmd || !endYmd || startYmd > endYmd) return 0;
+  const anchor = z.nextDate || z.lastDate;
+  if (!anchor) return 0;
+  const cycleDays = (z.cycleWeeks || 3) * 7;
+  const dayList = getDayList(z) || [1];
+  if (!dayList.length) return 0;
+  const dayOffsets = dayList.map(d => d - 1);
+  const maxOff = Math.max.apply(null, dayOffsets);
+  const qty = z.qty || 1;
+  function addDays(ymd, n) {
+    const d = parseLocalYmd(ymd);
+    d.setDate(d.getDate() + n);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  // anchor에서 기간 시작/끝까지 거리 기준 (기간 길이만으로 자르면 원격 anchor에서 0 발생)
+  const toStart = Math.floor((parseLocalYmd(startYmd) - parseLocalYmd(anchor)) / 86400000);
+  const toEnd   = Math.floor((parseLocalYmd(endYmd)   - parseLocalYmd(anchor)) / 86400000);
+  const maxDist = Math.max(Math.abs(toStart), Math.abs(toEnd)) + maxOff;
+  const maxCycles = Math.min(
+    Math.ceil(maxDist / Math.max(cycleDays, 1)) + 2,
+    500 // 무한루프 방지 안전 상한
+  );
+  // 현재 주기에서만 dayDates 오버라이드 적용 (달력 이동과 일치)
+  const useDayDates = !!(z.nextDate && anchor === z.nextDate && z.dayDates);
+  let doseCount = 0;
+  // 기준 주기부터 미래 방향
+  for (let c = 0; c <= maxCycles; c++) {
+    let anyBeforeEnd = false;
+    dayList.forEach(dn => {
+      let dateStr;
+      if (c === 0 && useDayDates) {
+        dateStr = getDayDate(z, dn);
+      } else {
+        dateStr = addDays(anchor, c * cycleDays + (dn - 1));
+      }
+      if (!dateStr) return;
+      if (dateStr <= endYmd) anyBeforeEnd = true;
+      if (dateStr >= startYmd && dateStr <= endYmd) doseCount++;
+    });
+    if (!anyBeforeEnd) break;
+  }
+  // 과거 방향 (이전 주기는 dayDates 미적용 — 오버라이드는 현재 주기만)
+  for (let c = -1; c >= -maxCycles; c--) {
+    let anyAfterStart = false;
+    dayList.forEach(dn => {
+      const dateStr = addDays(anchor, c * cycleDays + (dn - 1));
+      if (!dateStr) return;
+      if (dateStr >= startYmd) anyAfterStart = true;
+      if (dateStr >= startYmd && dateStr <= endYmd) doseCount++;
+    });
+    if (!anyAfterStart) break;
+  }
+  return doseCount * qty;
+}
+
+// 마지막 투여일: 현재 주기에서 완료(donedays)된 Day 중 최신 날짜만.
+// donedays 비면 '' (UI에서 '-') — lastDate 추정은 신규 등록 시 가짜 과거일을 만들어내므로 사용 안 함.
+function getLastAdminDate(z) {
+  if (!z) return '';
+  const done = z.donedays || [];
+  let latest = '';
+  done.forEach(dn => {
+    const d = getDayDate(z, dn);
+    if (d && d > latest) latest = d;
+  });
+  return latest || '';
+}
+
+// skipRender=true: DOM 동기화만 (resetAllState 등 데이터 비운 직후)
+function setZeroViewMode(mode, skipRender) {
+  if (mode !== 'calendar' && mode !== 'list' && mode !== 'druglist') mode = 'calendar';
+  zeroViewMode = mode;
+  const listEl = document.getElementById('zeroList');
+  const calEl = document.getElementById('zeroCalendar');
+  const drugEl = document.getElementById('zeroDrugList');
+  if (listEl) listEl.style.display = mode === 'list' ? '' : 'none';
+  if (calEl) calEl.style.display = mode === 'calendar' ? '' : 'none';
+  if (drugEl) drugEl.style.display = mode === 'druglist' ? '' : 'none';
+
+  const calBtn = document.getElementById('zeroViewCal');
+  const listBtn = document.getElementById('zeroViewList');
+  const drugBtn = document.getElementById('zeroViewDrugList');
+  [calBtn, listBtn, drugBtn].forEach(b => {
+    if (!b) return;
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-secondary');
+  });
+  const active = mode === 'calendar' ? calBtn : mode === 'list' ? listBtn : drugBtn;
+  if (active) {
+    active.classList.remove('btn-secondary');
+    active.classList.add('btn-primary');
+  }
+
+  const sortBtn = document.getElementById('zeroSortBtn');
+  if (sortBtn) sortBtn.style.display = mode === 'list' ? '' : 'none';
+
+  if (!skipRender) renderZeroDrugs();
+}
+
+function onZeroDrugPeriodChange() {
+  const s = document.getElementById('zeroDrugPeriodStart')?.value || '';
+  const e = document.getElementById('zeroDrugPeriodEnd')?.value || '';
+  if (s && e && s > e) {
+    toast('시작일이 종료일보다 늦습니다.', 'error');
+    // 잘못된 범위는 반영하지 않고 이전 유효 기간 유지
+    const startInp = document.getElementById('zeroDrugPeriodStart');
+    const endInp = document.getElementById('zeroDrugPeriodEnd');
+    if (startInp && zeroDrugPeriodStart) startInp.value = zeroDrugPeriodStart;
+    if (endInp && zeroDrugPeriodEnd) endInp.value = zeroDrugPeriodEnd;
+    return;
+  }
+  zeroDrugPeriodStart = s;
+  zeroDrugPeriodEnd = e;
+  renderZeroDrugList();
+}
+
+function setZeroDrugPeriodPreset(kind) {
+  const now = new Date();
+  function ymd(d) {
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  let start, end;
+  if (kind === 'month') {
+    const y = now.getFullYear(), m = now.getMonth();
+    start = y+'-'+String(m+1).padStart(2,'0')+'-01';
+    end = ymd(new Date(y, m + 1, 0));
+  } else if (kind === '4w') {
+    start = ymd(now);
+    const e = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 27);
+    end = ymd(e);
+  } else if (kind === '8w') {
+    start = ymd(now);
+    const e = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 55);
+    end = ymd(e);
+  } else {
+    return;
+  }
+  zeroDrugPeriodStart = start;
+  zeroDrugPeriodEnd = end;
+  renderZeroDrugList();
+}
+
+function renderZeroDrugList() {
+  const container = document.getElementById('zeroDrugList');
+  if (!container) return;
+
+  const search = (document.getElementById('zeroSearch')?.value || '').toLowerCase();
+  let drugs = getFilteredZeroDrugs();
+  if (search) {
+    drugs = drugs.filter(z =>
+      (z.patient || '').toLowerCase().includes(search) ||
+      (z.drugName || '').toLowerCase().includes(search) ||
+      (z.regNo || '').toLowerCase().includes(search)
+    );
+  }
+
+  // 기본 기간: 이번 달 1일 ~ 말일
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const defaultStart = y + '-' + String(m + 1).padStart(2, '0') + '-01';
+  const defaultEnd = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(new Date(y, m + 1, 0).getDate()).padStart(2, '0');
+  // 메모리 state 우선 (프리셋이 설정한 값). 입력 변경은 onZeroDrugPeriodChange가 state에 반영.
+  let startYmd = zeroDrugPeriodStart || defaultStart;
+  let endYmd = zeroDrugPeriodEnd || defaultEnd;
+  if (!startYmd) startYmd = defaultStart;
+  if (!endYmd) endYmd = defaultEnd;
+  zeroDrugPeriodStart = startYmd;
+  zeroDrugPeriodEnd = endYmd;
+
+  const invalidPeriod = !!(startYmd && endYmd && startYmd > endYmd);
+
+  // drugCode 기준 그룹 (없으면 drugName)
+  const groups = {};
+  drugs.forEach(z => {
+    const key = z.drugCode || z.drugName || '';
+    if (!groups[key]) groups[key] = { drugCode: z.drugCode, drugName: z.drugName, patients: [] };
+    // 동일 그룹 내 대표 약품명 유지 (첫 항목)
+    if (!groups[key].drugName && z.drugName) groups[key].drugName = z.drugName;
+    groups[key].patients.push(z);
+  });
+
+  // 영문 우선 A-Z 정렬 (locale 고정으로 브라우저 간 순서 안정화)
+  const groupList = Object.values(groups).sort((a, b) => {
+    const na = a.drugName || '', nb = b.drugName || '';
+    const aE = /^[A-Za-z]/.test(na), bE = /^[A-Za-z]/.test(nb);
+    if (aE !== bE) return aE ? -1 : 1;
+    return aE ? na.localeCompare(nb, 'en', { sensitivity: 'base' })
+              : na.localeCompare(nb, 'ko');
+  });
+  groupList.forEach(g => {
+    g.patients.sort((a, b) => {
+      const pc = (a.patient || '').localeCompare(b.patient || '', 'ko');
+      if (pc !== 0) return pc;
+      return (a.regNo || '').localeCompare(b.regNo || '', 'en');
+    });
+  });
+
+  // 전산재고(사용) 맵 — 대표코드 + barcode fallback (수요예측과 동일)
+  const sysUsedMap = {};
+  try {
+    getRealInventory().forEach(r => {
+      sysUsedMap[r.code] = r.systemQtyUsed;
+      if (r.barcode) sysUsedMap[r.barcode] = r.systemQtyUsed;
+    });
+  } catch(e) {}
+
+  let html = '';
+  html += '<div class="zero-drug-period-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">';
+  html += '<span style="font-weight:600;">기간:</span>';
+  html += '<input type="date" id="zeroDrugPeriodStart" value="' + startYmd + '" onchange="onZeroDrugPeriodChange()">';
+  html += '<span>~</span>';
+  html += '<input type="date" id="zeroDrugPeriodEnd" value="' + endYmd + '" onchange="onZeroDrugPeriodChange()">';
+  html += '<button class="btn btn-secondary btn-sm" onclick="setZeroDrugPeriodPreset(\'month\')">이번달</button>';
+  html += '<button class="btn btn-secondary btn-sm" onclick="setZeroDrugPeriodPreset(\'4w\')">4주</button>';
+  html += '<button class="btn btn-secondary btn-sm" onclick="setZeroDrugPeriodPreset(\'8w\')">8주</button>';
+  html += '<span style="color:#64748b;font-size:11px;">기간필요 = 기간 내 예정량 + 기간 전 미투여</span>';
+  html += '</div>';
+
+  if (drugs.length === 0) {
+    html += '<div class="empty-state"><div class="icon">-</div><p>등록된 제로관리약 스케줄이 없습니다.</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  html += '<div class="zero-drug-table-wrap">';
+  html += '<table class="zero-drug-table">';
+  html += '<thead><tr>';
+  html += '<th style="min-width:120px;">약품명</th>';
+  html += '<th>환자</th>';
+  html += '<th>등록번호</th>';
+  html += '<th>간격</th>';
+  html += '<th>개수</th>';
+  html += '<th>마지막투여일</th>';
+  html += '<th>기간필요</th>';
+  html += '<th>약품합계</th>';
+  html += '<th>전산재고(사용)</th>';
+  html += '</tr></thead><tbody>';
+
+  groupList.forEach(g => {
+    const n = g.patients.length;
+    // 기간 내 예정 + 기간 시작 전 미투여(경과) 합산
+    const needs = g.patients.map(z => {
+      if (invalidPeriod) return 0;
+      return countQtyInPeriod(z, startYmd, endYmd) + countOverdueNeedOutsidePeriod(z, startYmd);
+    });
+    const groupTotal = needs.reduce((s, v) => s + v, 0);
+    const sysUsed = (g.drugCode != null && g.drugCode !== '') ? sysUsedMap[g.drugCode] : undefined;
+    const sysUsedLabel = sysUsed === undefined ? '-' : sysUsed;
+    const sysUsedStyle = (sysUsed !== undefined && sysUsed < groupTotal) ? 'color:#dc2626;font-weight:600;' : '';
+    g.patients.forEach((z, i) => {
+      const lastAdmin = getLastAdminDate(z) || '-';
+      const dayLabel = getDayLabel(z);
+      const overdueMark = hasOverdueDose(z)
+        ? ' <span class="badge badge-red" title="투여 예정일 경과">!</span>'
+        : '';
+      html += '<tr>';
+      if (i === 0) {
+        html += '<td class="drug-name" rowspan="' + n + '">' + escapeHtml(g.drugName || '') + '</td>';
+      }
+      html += '<td>' + escapeHtml(z.patient || '') + overdueMark + '</td>';
+      html += '<td>' + escapeHtml(z.regNo || '') + '</td>';
+      html += '<td class="num">' + (z.cycleWeeks || 3) + '주</td>';
+      html += '<td class="num" title="' + escapeHtml(dayLabel) + '">' + (z.qty || 1);
+      html += ' <span style="font-size:10px;color:#94a3b8;">' + escapeHtml(dayLabel) + '</span></td>';
+      html += '<td>' + escapeHtml(lastAdmin) + '</td>';
+      html += '<td class="num">' + needs[i] + '</td>';
+      if (i === 0) {
+        html += '<td class="total" rowspan="' + n + '">' + groupTotal + '</td>';
+        html += '<td class="num" rowspan="' + n + '" style="' + sysUsedStyle + '">' + sysUsedLabel + '</td>';
+      }
+      html += '</tr>';
+    });
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
 function renderZeroDrugs() {
-  if (!_renderingZero && calViewActive) { _renderingZero = true; renderZeroCalendar(); _renderingZero = false; }
+  if (zeroViewMode === 'calendar') {
+    if (!_renderingZero) { _renderingZero = true; renderZeroCalendar(); _renderingZero = false; }
+    return;
+  }
+  if (zeroViewMode === 'druglist') {
+    renderZeroDrugList();
+    return;
+  }
+  // list 모드: 환자 카드
   const search = (document.getElementById('zeroSearch')?.value || '').toLowerCase();
   const now = new Date(); now.setHours(0,0,0,0);
   let drugs = getFilteredZeroDrugs();
-  if (search) drugs = drugs.filter(z => z.patient.toLowerCase().includes(search) || z.drugName.toLowerCase().includes(search));
+  if (search) {
+    drugs = drugs.filter(z =>
+      (z.patient || '').toLowerCase().includes(search) ||
+      (z.drugName || '').toLowerCase().includes(search) ||
+      (z.regNo || '').toLowerCase().includes(search)
+    );
+  }
 
   const container = document.getElementById('zeroList');
+  if (!container) return;
   if (drugs.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="icon">-</div><p>등록된 제로관리약 스케줄이 없습니다.</p></div>';
     return;
@@ -4627,11 +4991,17 @@ function renderZeroDrugs() {
     });
     const firstDrug = g.drugs[0];
 
+    // 그룹 내 어느 약이라도 투여 예정일 경과(미투여)면 이름 옆 !
+    const groupOverdue = g.drugs.some(z => hasOverdueDose(z));
+    const overdueMark = groupOverdue
+      ? ' <span class="badge badge-red" title="투여 예정일 경과">!</span>'
+      : '';
+
     html += `<div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;overflow:hidden;${groupCls}">`;
     // 환자 헤더
     html += `<div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #e2e8f0;" onclick="togglePatientMemo('${firstDrug.id}')">`;
     html += `<div>`;
-    html += `<span style="font-weight:700;font-size:13px;">${g.patient}${memoIcon}</span>`;
+    html += `<span style="font-weight:700;font-size:13px;">${escapeHtml(g.patient || '')}${overdueMark}${memoIcon}</span>`;
     html += g.regNo ? ` <span style="color:#64748b;font-size:11px;">(${g.regNo})</span> <span style="cursor:pointer;font-size:10px;color:#3b82f6;" onclick="event.stopPropagation();copyRegNo(\'${g.regNo}\')" title="등록번호 복사">[복사]</span>` : '';
     let diffBadge = '';
     if (diff0 < 0) diffBadge = `<span class="badge badge-red">${-diff0}일 지남</span>`;
@@ -5801,16 +6171,12 @@ document.addEventListener('click', function(e) {
 // ============================================================
 // 제로관리약 달력 뷰
 // ============================================================
-let calViewActive = true;
 let calYear, calMonth;
 (function(){ var d = new Date(); calYear = d.getFullYear(); calMonth = d.getMonth(); })();
 
+// 호환용: 달력 <-> 목록 토글
 function toggleZeroView() {
-  calViewActive = !calViewActive;
-  document.getElementById('zeroList').style.display = calViewActive ? 'none' : '';
-  document.getElementById('zeroCalendar').style.display = calViewActive ? '' : 'none';
-  document.getElementById('zeroViewToggle').innerHTML = calViewActive ? '목록' : '달력';
-  if (calViewActive) renderZeroCalendar();
+  setZeroViewMode(zeroViewMode === 'calendar' ? 'list' : 'calendar');
 }
 
 function calNav(dir) {
@@ -6183,7 +6549,6 @@ function renderAll() {
   renderDashboard();
   populateDrugSelects();
   renderZeroDrugs();
-  if (calViewActive) renderZeroCalendar();
 }
 
 // ============================================================
