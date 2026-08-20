@@ -4276,10 +4276,10 @@ function countOverdueNeedOutsidePeriod(z, startYmd) {
   return count * qty;
 }
 
-// 목록 표시용: 오늘 이후 가장 가까운 투여일 (없으면 nextDate)
+// 목록 표시용: 현재 주기 미투여 우선, 없으면 다음 주기 D1
 function getEffectiveNextDate(z) {
-  const todayStr = (function(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
-  // 현재 주기(nextDate)에서 아직 투여 안 된 Day만 후보로
+  if (!z) return '';
+  const todayStr = today();
   const dayList = getDayList(z);
   const done = z.donedays || [];
   function addDays(ymd, n) {
@@ -4291,12 +4291,20 @@ function getEffectiveNextDate(z) {
   if (z.nextDate) {
     dayList.forEach(dn => {
       if (done.includes(dn)) return;
-      candidates.push(getDayDate(z, dn));
+      const ds = getDayDate(z, dn);
+      if (ds) candidates.push(ds);
     });
   }
   candidates.sort();
   const upcoming = candidates.find(d => d >= todayStr);
-  return upcoming || candidates[0] || z.nextDate;
+  if (upcoming) return upcoming;
+  if (candidates[0]) return candidates[0]; // 경과 미투여 유지
+  if (z.nextDate) {
+    const cycleDays = (z.cycleWeeks || 3) * 7;
+    const firstDayNum = dayList.length ? Math.min.apply(null, dayList) : 1;
+    return addDays(z.nextDate, cycleDays + (firstDayNum - 1));
+  }
+  return z.nextDate;
 }
 
 function toggleDayInput() {
@@ -4881,6 +4889,7 @@ function renderZeroDrugList() {
   html += '<th>간격</th>';
   html += '<th>개수</th>';
   html += '<th>마지막투여일</th>';
+  html += '<th>다음투여일</th>';
   html += '<th>기간필요</th>';
   html += '<th>약품합계</th>';
   html += '<th>현재고(전산)</th>';
@@ -4913,6 +4922,7 @@ function renderZeroDrugList() {
       html += '<td class="num" title="' + escapeHtml(dayLabel) + '">' + (z.qty || 1);
       html += ' <span style="font-size:10px;color:#94a3b8;">' + escapeHtml(dayLabel) + '</span></td>';
       html += '<td>' + escapeHtml(lastAdmin) + '</td>';
+      html += '<td>' + escapeHtml(getEffectiveNextDate(z) || '-') + '</td>';
       html += '<td class="num">' + needs[i] + '</td>';
       if (i === 0) {
         html += '<td class="total" rowspan="' + n + '">' + groupTotal + '</td>';
@@ -5089,7 +5099,7 @@ function renderZeroDrugs() {
       html += `<div style="font-size:11px;color:#64748b;margin:2px 0;line-height:1.4;">`;
       html += `${z.qty}개/일 x ${dayList.length}일 = 주기당 <b>${totalQty}개</b>`;
       html += ` | ${z.cycleWeeks}주 간격`;
-      html += ` | 마지막: ${z.lastDate} | <b>다음: ${z.nextDate}</b>`;
+      html += ` | 마지막: ${getLastAdminDate(z) || '-'} | <b>다음: ${getEffectiveNextDate(z) || '-'}</b>`;
       html += `</div>`;
       // Day별 투여 버튼
       html += `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">`;
@@ -6211,39 +6221,64 @@ function calNav(dir) {
 function collectCalEvents(year, month) {
   const events = {};
   const todayStr = today();
+  function addDays(ymd, n) {
+    const d = parseLocalYmd(ymd);
+    d.setDate(d.getDate() + n);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function pushEvent(dateStr, ev) {
+    if (!dateStr) return;
+    const dt = parseLocalYmd(dateStr);
+    if (dt.getFullYear() !== year || dt.getMonth() !== month) return;
+    if (!events[dateStr]) events[dateStr] = [];
+    if (events[dateStr].some(e => e.zid===ev.zid && e.dayNum===ev.dayNum)) return;
+    events[dateStr].push(ev);
+  }
   getFilteredZeroDrugs().forEach(z => {
     const dayList = getDayList(z);
     const done = z.donedays || [];
     // 현재 주기
     dayList.forEach(d => {
       const dateStr = getDayDate(z, d);
-      if (!dateStr) return;
-      const dt = parseLocalYmd(dateStr);
-      if (dt.getFullYear() === year && dt.getMonth() === month) {
-        if (!events[dateStr]) events[dateStr] = [];
-        events[dateStr].push({ patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:done.includes(d), zid:z.id });
-      }
+      pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:done.includes(d), zid:z.id });
     });
-    // 과거 주기
-    const lastBase = new Date(z.lastDate);
-    dayList.forEach(d => {
-      const dt = new Date(lastBase); dt.setDate(dt.getDate() + (d - 1));
-      const dateStr = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-      if (dt.getFullYear() === year && dt.getMonth() === month) {
-        if (!events[dateStr]) events[dateStr] = [];
-        if (!events[dateStr].some(e => e.patient===z.patient && e.drugName===z.drugName && e.dayNum===d)) {
-          // 오늘 이하 날짜는 자동 완료, 미래만 미투약
-          let pastDone;
-          if (dateStr <= todayStr) {
-            pastDone = !(z.pastUndone && z.pastUndone.includes(d+'|'+z.lastDate));
-          } else {
-            // 미래: donedays에 있으면 완료, 아니면 미투약
-            pastDone = (z.donedays || []).includes(d);
-          }
-          events[dateStr].push({ patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:pastDone, past:true, pastCycleDate:z.lastDate, zid:z.id });
+    // lastDate는 로컬 YMD
+    if (z.lastDate) {
+      dayList.forEach(d => {
+        const dateStr = addDays(z.lastDate, d - 1);
+        let pastDone;
+        if (dateStr <= todayStr) {
+          pastDone = !(z.pastUndone && z.pastUndone.includes(d+'|'+z.lastDate));
+        } else {
+          pastDone = (z.donedays || []).includes(d);
         }
+        pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:pastDone, past:true, pastCycleDate:z.lastDate, zid:z.id });
+      });
+    }
+    // 요청 월까지 미래 주기. dayDates는 현재 주기만. 오늘 이전 미래주기는 그리지 않음.
+    if (z.nextDate) {
+      const cycleDays = (z.cycleWeeks || 3) * 7;
+      const monthStart = year + '-' + String(month + 1).padStart(2, '0') + '-01';
+      const lastDom = new Date(year, month + 1, 0).getDate();
+      const monthEnd = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(lastDom).padStart(2, '0');
+      const dayOffsets = dayList.map(d => d - 1);
+      const maxOff = dayOffsets.length ? Math.max.apply(null, dayOffsets) : 0;
+      const toStart = Math.floor((parseLocalYmd(monthStart) - parseLocalYmd(z.nextDate)) / 86400000);
+      const toEnd = Math.floor((parseLocalYmd(monthEnd) - parseLocalYmd(z.nextDate)) / 86400000);
+      const maxDist = Math.max(Math.abs(toStart), Math.abs(toEnd)) + maxOff;
+      const maxCycles = Math.min(Math.ceil(maxDist / Math.max(cycleDays, 1)) + 2, 500);
+      for (let c = 1; c <= maxCycles; c++) {
+        let anyInOrBefore = false;
+        dayList.forEach(d => {
+          const dateStr = addDays(z.nextDate, c * cycleDays + (d - 1));
+          const dt = parseLocalYmd(dateStr);
+          if (dt.getFullYear() < year || (dt.getFullYear() === year && dt.getMonth() <= month)) anyInOrBefore = true;
+          if (dateStr < todayStr) return;
+          pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:false, future:true, zid:z.id });
+        });
+        if (!anyInOrBefore) break;
       }
-    });
+    }
   });
   return events;
 }
@@ -6292,8 +6327,8 @@ function buildMonthTable(year, month, events) {
             const allDone = pg.items.every(e=>e.done);
             const anyUrgent = !allDone && dateStr<=todayStr;
             const cls = allDone?'done':(anyUrgent?'urgent':'');
-            // 드래그: 미투여만 가능
-            const canMove = !allDone;
+            // 현재/과거 미투여만 이동 (다음 주기 날짜는 nextDate를 건드리지 않음)
+            const canMove = pg.items.some(e => !e.done && !e.future);
             const isSelected = _moveData && _moveData.patient === pg.patient && _moveData.regNo === pg.regNo && _moveData.fromDate === dateStr;
             const selCls = isSelected ? ' selected-move' : '';
             html += `<div class="cal-item ${cls}${selCls}">`;
@@ -6313,6 +6348,10 @@ function buildMonthTable(year, month, events) {
                 // 이동 모드: 클릭 이벤트 없음 (td로 전파되어야 함)
                 html += `<div style="${lineStyle}">`;
                 html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}</span>`;
+                html += `</div>`;
+              } else if (ev.future) {
+                html += `<div style="cursor:default;${lineStyle}" onclick="event.stopPropagation();toast('다음 주기 예정','info')" title="다음 주기 예정">`;
+                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}</span> <span class="cal-future-label" style="color:#94a3b8;font-size:9px;">(다음주기)</span>`;
                 html += `</div>`;
               } else {
                 // 일반 모드: 투여 완료/취소 클릭
@@ -6457,7 +6496,7 @@ function calClickDate(toDate) {
       return;
     }
 
-    // 다중 주기 탐색: nextDate에서 최대 10주기 전까지 역추적
+    // 현재/과거 주기만 탐색. 미래 주기·미발견은 nextDate/donedays를 건드리지 않음
     function findCycleContaining(baseDate, searchDate) {
       let base = new Date(baseDate);
       for (let attempt = 0; attempt < 12; attempt++) {
@@ -6468,19 +6507,7 @@ function calClickDate(toDate) {
         if (searchDate >= fmtD(first) && searchDate <= fmtD(last)) {
           return { base: fmtD(base), isNext: (fmtD(base) === z.nextDate), isLast: (fmtD(base) === z.lastDate) };
         }
-        base.setDate(base.getDate() - cycleDays); // 한 주기 전으로
-      }
-      // 미래도 탐색 (nextDate 이후 2주기)
-      base = new Date(baseDate);
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        base.setDate(base.getDate() + cycleDays);
-        const first = new Date(base);
-        first.setDate(first.getDate() + (dayList[0] - 1));
-        const last = new Date(base);
-        last.setDate(last.getDate() + (dayList[dayList.length-1] - 1));
-        if (searchDate >= fmtD(first) && searchDate <= fmtD(last)) {
-          return { base: fmtD(base), isNext: false, isLast: false };
-        }
+        base.setDate(base.getDate() - cycleDays);
       }
       return null;
     }
@@ -6488,38 +6515,27 @@ function calClickDate(toDate) {
     const cycle = findCycleContaining(z.nextDate, fromDate);
     console.log('[이동]', z.drugName, 'nextDate:', z.nextDate, 'lastDate:', z.lastDate, 'foundCycle:', JSON.stringify(cycle));
 
-    if (cycle) {
-      if (cycle.isNext) {
-        // nextDate 주기 이동
-        const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
-        console.log('[이동] nextDate 이동:', z.nextDate, '->', fmtD(nn));
-        z.nextDate = fmtD(nn);
-        z.donedays = []; // 이동 시 완료 상태 초기화
-      } else if (cycle.isLast) {
-        // lastDate 주기 이동 → 간격 유지하며 nextDate도 함께 이동
-        const nl = new Date(z.lastDate); nl.setDate(nl.getDate() + diffDays);
-        const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
-        console.log('[이동] lastDate 이동:', z.lastDate, '->', fmtD(nl), ', nextDate:', z.nextDate, '->', fmtD(nn));
-        z.lastDate = fmtD(nl);
-        z.nextDate = fmtD(nn);
-        z.donedays = []; // 이동 시 완료 상태 초기화
-      } else {
-        // 이전 주기 이동 → 해당 주기 기준으로 nextDate 재계산
-        const oldBase = new Date(cycle.base);
-        const newBase = new Date(oldBase); newBase.setDate(newBase.getDate() + diffDays);
-        // lastDate = 이동된 주기, nextDate = 이동된 주기 + cycleDays
-        z.lastDate = fmtD(newBase);
-        const nn = new Date(newBase); nn.setDate(nn.getDate() + cycleDays);
-        z.nextDate = fmtD(nn);
-        z.donedays = [];
-        console.log('[이동] 이전주기 이동 → lastDate:', z.lastDate, ', nextDate:', z.nextDate);
-      }
-    } else {
-      // 주기를 찾지 못한 경우: 안전하게 nextDate만 이동
+    if (!cycle) return;
+    if (cycle.isNext) {
       const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
-      console.log('[이동] 주기미발견, nextDate 이동:', z.nextDate, '->', fmtD(nn));
+      console.log('[이동] nextDate 이동:', z.nextDate, '->', fmtD(nn));
       z.nextDate = fmtD(nn);
       z.donedays = [];
+    } else if (cycle.isLast) {
+      const nl = new Date(z.lastDate); nl.setDate(nl.getDate() + diffDays);
+      const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
+      console.log('[이동] lastDate 이동:', z.lastDate, '->', fmtD(nl), ', nextDate:', z.nextDate, '->', fmtD(nn));
+      z.lastDate = fmtD(nl);
+      z.nextDate = fmtD(nn);
+      z.donedays = [];
+    } else {
+      const oldBase = new Date(cycle.base);
+      const newBase = new Date(oldBase); newBase.setDate(newBase.getDate() + diffDays);
+      z.lastDate = fmtD(newBase);
+      const nn = new Date(newBase); nn.setDate(nn.getDate() + cycleDays);
+      z.nextDate = fmtD(nn);
+      z.donedays = [];
+      console.log('[이동] 이전주기 이동 → lastDate:', z.lastDate, ', nextDate:', z.nextDate);
     }
   });
 
