@@ -190,6 +190,17 @@ td.cold-badge { color:#0ea5e9; font-weight:600; }
 .cold-toggle.active { background:#e0f2fe; border-color:#7dd3fc; color:#0369a1; }
 td.surplus-cell:hover { background:#eff6ff; text-decoration:underline dotted #3b82f6; }
 td.stock-highlight { background:#fefce8; font-weight:700; }
+#forecastTable tbody tr.forecast-zero-row td,
+#forecastTable tbody tr.forecast-zero-row td.stock-highlight {
+  background-color: #e6f9f2;
+}
+#forecastTable tbody tr.forecast-zero-row td:first-child {
+  border-left: 3px solid #6ee7b7;
+}
+#forecastTable tbody tr.forecast-zero-row:hover td,
+#forecastTable tbody tr.forecast-zero-row:hover td.stock-highlight {
+  background-color: #d1fae5;
+}
 .order-input { width:65px; padding:4px 6px; font-size:12px; text-align:right; border:1px solid #d1d5db; border-radius:4px; }
 .order-input:focus { border-color:#3b82f6; outline:none; }
 /* 달력 */
@@ -659,7 +670,6 @@ body.general-mode .text-blue { color:#16a34a; }
           <th class="sortable" data-table="forecast" data-key="name">약품명</th>
           <th class="sortable" data-table="forecast" data-key="periodTotal" style="text-align:right">기간총사용량</th>
           <th class="sortable" data-table="forecast" data-key="dailyAvg" style="text-align:right">하루평균</th>
-          <th class="sortable" data-table="forecast" data-key="monthlyAvg" style="text-align:right">월평균</th>
           <th class="sortable" data-table="forecast" data-key="systemStock" style="text-align:right;background:#f1f5f9;">전산재고</th>
           <th class="sortable" data-table="forecast" data-key="systemStockUsed" style="text-align:right;background:#f1f5f9;">전산재고(사용)</th>
           <th class="sortable" data-table="forecast" data-key="currentStock" style="text-align:right;background:#fefce8;font-weight:700;">실재고</th>
@@ -667,6 +677,7 @@ body.general-mode .text-blue { color:#16a34a; }
           <th class="sortable" data-table="forecast" data-key="diffSystem" style="text-align:right">과부족(전산)</th>
           <th class="sortable" data-table="forecast" data-key="diff" style="text-align:right">과부족(실재고)</th>
           <th>상태</th>
+          <th class="sortable" data-table="forecast" data-key="monthlyAvg" style="text-align:right">월평균</th>
           <th style="text-align:right">발주수량</th>
           <th style="width:40px;"></th>
         </tr></thead>
@@ -3532,7 +3543,7 @@ function getDemandForecast() {
     const diffSystem = queryDays > 0 ? systemStockUsed - queryNeed : systemStockUsed - Math.ceil(monthlyAvg);
 
     results.push({
-      code: item.code, barcode: barcodeMap[item.code] || barcodeMap[resolvedCode] || (/^\d+$/.test(item.code) ? item.code : '') || item.code, name: item.name,
+      code: item.code, barcode: barcodeMap[item.code] || barcodeMap[resolvedCode] || (/^\d+$/.test(item.code) ? item.code : '') || item.code, resolvedCode, name: item.name,
       periodTotal: item.total,
       dailyAvg: parseFloat(dailyAvg.toFixed(1)),
       monthlyAvg: Math.round(monthlyAvg),
@@ -4032,6 +4043,19 @@ function saveManualSurplusToInventory() {
   toast('잉여가 재고현황에 반영되었습니다!', 'success');
 }
 
+// 빈 drugCode는 잔여값이며 전체 매칭이 아님
+function isZeroManagedForecastDrug(forecastItem, zeroDrugs) {
+  if (!forecastItem || !Array.isArray(zeroDrugs)) return false;
+  const code = forecastItem.code != null ? String(forecastItem.code).trim() : '';
+  const barcode = forecastItem.barcode != null ? String(forecastItem.barcode).trim() : '';
+  const resolved = forecastItem.resolvedCode != null ? String(forecastItem.resolvedCode).trim() : '';
+  return zeroDrugs.some(z => {
+    const zc = z && z.drugCode != null ? String(z.drugCode).trim() : '';
+    if (!zc) return false;
+    return (code && zc === code) || (barcode && zc === barcode) || (resolved && zc === resolved);
+  });
+}
+
 function renderForecast() {
   let forecast = getDemandForecast();
   const tbody = document.getElementById('forecastBody');
@@ -4074,15 +4098,20 @@ function renderForecast() {
   }
 
   forecast = applySortToArray(forecast, 'forecast');
+  let zeroDrugs = [];
+  try {
+    const raw = typeof getFilteredZeroDrugs === 'function' ? getFilteredZeroDrugs() : (state.zeroDrugs || []);
+    if (Array.isArray(raw)) zeroDrugs = raw;
+  } catch (e) { /* 제로관리약 조회 실패가 수요예측 테이블을 막지 않음 */ }
   tbody.innerHTML = forecast.map(f => {
     const cls = f.status === 'shortage' ? 'text-red font-bold' : f.status === 'tight' ? 'text-blue' : '';
     const clsSys = f.diffSystem < 0 ? 'text-red font-bold' : f.diffSystem <= 2 ? 'text-blue' : '';
     const draftVal = orderDraft[f.code];
-    return `<tr>
+    const rowClass = isZeroManagedForecastDrug(f, zeroDrugs) ? ' class="forecast-zero-row"' : '';
+    return `<tr${rowClass}>
       <td>${f.code}</td><td>${f.name}</td>
       <td class="num">${f.periodTotal}</td>
       <td class="num">${f.dailyAvg}</td>
-      <td class="num">${f.monthlyAvg}</td>
       <td class="num">${f.systemStock}</td>
       <td class="num">${f.systemStockUsed}</td>
       <td class="num stock-highlight">${f.currentStock}</td>
@@ -4090,6 +4119,7 @@ function renderForecast() {
       <td class="num ${clsSys}">${f.diffSystem > 0 ? '+' : ''}${f.diffSystem}</td>
       <td class="num ${cls}">${f.diff > 0 ? '+' : ''}${f.diff}</td>
       <td>${f.status === 'shortage' ? '<span class="badge badge-red">부족</span>' : f.status === 'tight' ? '<span class="badge badge-yellow">주의</span>' : '<span class="badge badge-green">정상</span>'}</td>
+      <td class="num">${f.monthlyAvg}</td>
       <td><input type="number" class="order-input" data-code="${f.code}" data-barcode="${f.barcode}" min="0" value="${draftVal > 0 ? draftVal : ''}"></td>
       <td class="text-center"><button class="btn btn-secondary btn-sm forecast-hide-btn" data-code="${f.code}" title="숨기기" style="padding:2px 6px;font-size:11px;">숨김</button></td>
     </tr>`;
