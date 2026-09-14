@@ -33,6 +33,11 @@ export async function onRequestGet(context) {
     return Response.json({ data: '{}', daily_data: '{}', updated_at: null });
   }
 
+  const since = url.searchParams.get('since');
+  if (since && since === row.updated_at) {
+    return new Response(null, { status: 304 });
+  }
+
   return Response.json({
     data: row.data,
     daily_data: row.daily_data,
@@ -45,7 +50,7 @@ export async function onRequestPut(context) {
 
   try {
     const body = await request.json();
-    const { type, data, daily_data } = body;
+    const { type, data, daily_data, base_updated_at } = body;
 
     if (!type || !['chemo', 'general'].includes(type)) {
       return Response.json({ error: 'type 필요' }, { status: 400 });
@@ -69,11 +74,58 @@ export async function onRequestPut(context) {
       } catch(e) { /* JSON 파싱 실패는 무시 */ }
     }
 
-    const now = new Date().toISOString();
+    const current = await env.DB.prepare(
+      'SELECT data, daily_data, updated_at FROM app_state WHERE id = ?'
+    ).bind(type).first();
 
-    await env.DB.prepare(
-      'INSERT OR REPLACE INTO app_state (id, data, daily_data, updated_at) VALUES (?, ?, ?, ?)'
-    ).bind(type, data || '{}', daily_data || '{}', now).run();
+    let now = new Date().toISOString();
+    // 같은 밀리초에 저장돼도 이전 버전보다 반드시 큰 토큰을 만들기 위해 1ms 보정
+    if (base_updated_at && now <= base_updated_at) now = new Date(Date.parse(base_updated_at) + 1).toISOString();
+
+    if (!current) {
+      try {
+        await env.DB.prepare(
+          'INSERT INTO app_state (id, data, daily_data, updated_at) VALUES (?, ?, ?, ?)'
+        ).bind(type, data || '{}', daily_data || '{}', now).run();
+      } catch (insertErr) {
+        const latest = await env.DB.prepare(
+          'SELECT data, daily_data, updated_at FROM app_state WHERE id = ?'
+        ).bind(type).first();
+        if (!latest) throw insertErr;
+        return Response.json({
+          error: '다른 사용자가 먼저 변경했습니다.',
+          data: latest.data || '{}',
+          daily_data: latest.daily_data || '{}',
+          updated_at: latest.updated_at || null,
+        }, { status: 409 });
+      }
+    } else {
+      if (!base_updated_at) {
+        return Response.json({ error: '최신 데이터를 다시 불러온 뒤 저장하세요.' }, { status: 428 });
+      }
+
+      const updateResult = await env.DB.prepare(
+        'UPDATE app_state SET data = ?, daily_data = ?, updated_at = ? WHERE id = ? AND updated_at = ?'
+      ).bind(data || '{}', daily_data || '{}', now, type, base_updated_at).run();
+
+      if (!updateResult.meta || updateResult.meta.changes !== 1) {
+        const latest = await env.DB.prepare(
+          'SELECT data, daily_data, updated_at FROM app_state WHERE id = ?'
+        ).bind(type).first();
+        if (!latest) {
+          await env.DB.prepare(
+            'INSERT INTO app_state (id, data, daily_data, updated_at) VALUES (?, ?, ?, ?)'
+          ).bind(type, data || '{}', daily_data || '{}', now).run();
+        } else {
+          return Response.json({
+            error: '다른 사용자가 먼저 변경했습니다.',
+            data: latest.data || '{}',
+            daily_data: latest.daily_data || '{}',
+            updated_at: latest.updated_at || null,
+          }, { status: 409 });
+        }
+      }
+    }
 
     // 재고 히스토리 저장 (AI 수요예측용, 365일 보관)
     try {

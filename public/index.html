@@ -122,38 +122,6 @@ input:focus,select:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 
 .toast-error { background:#ef4444; }
 .toast-info { background:#3b82f6; }
 @keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
-/* AI 챗봇 */
-.ai-fab { position:fixed !important; bottom:20px !important; right:20px !important; width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(79,70,229,.4); z-index:99999 !important; display:flex; align-items:center; justify-content:center; transition:transform .2s,box-shadow .2s; }
-.ai-fab:hover { transform:scale(1.08); box-shadow:0 6px 20px rgba(79,70,229,.5); }
-.ai-fab svg { pointer-events:none; }
-.ai-chat-panel { position:fixed !important; bottom:82px !important; right:20px !important; width:380px; height:520px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.18); z-index:9999; display:none; flex-direction:column; overflow:hidden; }
-.ai-chat-panel.open { display:flex; }
-.ai-chat-hdr { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
-.ai-chat-hdr-title { font-weight:700; font-size:14px; }
-.ai-chat-hdr-sub { font-size:10px; opacity:.7; }
-.ai-chat-hdr-close { background:none; border:none; color:#fff; cursor:pointer; font-size:18px; padding:0 4px; opacity:.8; }
-.ai-chat-hdr-close:hover { opacity:1; }
-.ai-chat-body { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
-.ai-bubble { max-width:88%; padding:10px 13px; border-radius:12px; font-size:13px; line-height:1.55; word-break:break-word; white-space:pre-wrap; }
-.ai-bubble-ai { background:#f1f5f9; color:#1e293b; align-self:flex-start; border-bottom-left-radius:3px; }
-.ai-bubble-user { background:#4f46e5; color:#fff; align-self:flex-end; border-bottom-right-radius:3px; }
-.ai-bubble-system { background:#fef3c7; color:#92400e; align-self:center; font-size:11px; padding:4px 10px; border-radius:8px; }
-.ai-typing { align-self:flex-start; color:#94a3b8; font-size:12px; font-style:italic; padding:4px 0; }
-.ai-quick-bar { display:flex; gap:4px; padding:6px 12px; flex-wrap:wrap; border-top:1px solid #f1f5f9; flex-shrink:0; }
-.ai-quick-btn { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:14px; padding:4px 10px; font-size:11px; cursor:pointer; white-space:nowrap; font-family:inherit; transition:background .15s; }
-.ai-quick-btn:hover { background:#e2e8f0; }
-.ai-input-bar { display:flex; border-top:1px solid #e2e8f0; padding:8px; gap:6px; flex-shrink:0; }
-.ai-input-bar input { flex:1; border:1px solid #d1d5db; border-radius:20px; padding:8px 14px; font-size:13px; font-family:inherit; outline:none; }
-.ai-input-bar input:focus { border-color:#4f46e5; box-shadow:0 0 0 2px rgba(79,70,229,.12); }
-.ai-send-btn { background:#4f46e5; color:#fff; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
-.ai-send-btn:hover { background:#4338ca; }
-.ai-send-btn:disabled { opacity:.5; cursor:default; }
-.ai-memory-tag { display:inline-block; background:#dbeafe; color:#1e40af; font-size:11px; padding:2px 8px; border-radius:8px; margin-top:6px; }
-.ai-mode-badge { display:inline-block; background:rgba(255,255,255,.2); color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; margin-top:2px; font-weight:600; letter-spacing:.3px; }
-@media(max-width:600px) {
-  .ai-chat-panel { right:8px; left:8px; width:auto; bottom:74px; height:65vh; }
-  .ai-fab { bottom:14px; right:14px; width:46px; height:46px; }
-}
 .schedule-card { border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
 .schedule-card.warn { border-color:#fde68a; background:#fffbeb; }
 .schedule-card.urgent { border-color:#fecaca; background:#fef2f2; }
@@ -218,7 +186,7 @@ td.stock-highlight { background:#fefce8; font-weight:700; }
   .zcal .cal-day { font-size:10px; margin-bottom:1px; }
   .zcal .cal-item { padding:1px 2px; margin:1px 0; font-size:9px; border-left-width:2px; border-radius:2px; }
   .zcal .cal-move-btn-wrap { display:none; }
-  .zcal .cal-reg-no, .zcal .ci-qty, .zcal .cal-past-label { display:none; }
+  .zcal .cal-reg-no, .zcal .ci-qty { display:none; }
   .zcal .ci-patient { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:52px; }
   .zcal .ci-drug { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:52px; font-size:8px; }
   .zcal .cal-done-icon { font-size:10px !important; }
@@ -286,6 +254,7 @@ td.stock-highlight { background:#fefce8; font-weight:700; }
 .memo-slide .memo-date { font-size:11px; color:#94a3b8; }
 .memo-slide .memo-save { padding:4px 12px; font-size:11px; font-weight:600; background:#3b82f6; color:#fff; border:none; border-radius:4px; cursor:pointer; }
 .memo-slide .memo-save:hover { background:#2563eb; }
+.zero-memo-preview { margin:0 10px 5px; color:#64748b; font-size:11px; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
 
 /* 대시보드 알림 섹션 */
 .dash-alerts-section { display:flex; gap:12px; margin-bottom:16px; }
@@ -490,9 +459,14 @@ body.general-mode .text-blue { color:#16a34a; }
     <div class="flex-between mb-8">
       <h3 id="invTitle" style="border:none;padding:0;margin:0;">현재 항암제 재고</h3>
       <div class="flex gap-8">
+        <button class="btn btn-secondary btn-sm admin-only" onclick="toggleInventoryMasterEditor()">마스터 편집</button>
         <button class="btn btn-secondary btn-sm" onclick="exportInventoryCheck()">재고조사용 출력</button>
         <button class="btn btn-primary btn-sm" onclick="exportInventory()">엑셀 내보내기</button>
       </div>
+    </div>
+    <div id="inventoryMasterEditor" class="admin-only" style="display:none;margin:-2px 0 8px;padding:6px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;">
+      <input type="text" id="inventoryMasterCode" placeholder="재고 약품코드 또는 물품코드" style="width:220px;padding:4px 6px;font-size:12px;">
+      <button class="btn btn-success btn-sm" onclick="addInventoryMaster()">추가</button>
     </div>
     <div class="search-bar">
       <input type="text" id="invSearch" placeholder="약품명 또는 코드로 검색..." oninput="renderInventory()">
@@ -511,6 +485,7 @@ body.general-mode .text-blue { color:#16a34a; }
           <th style="text-align:center">냉장</th>
           <th class="sortable" data-table="inv" data-key="price" style="text-align:right">단가</th>
           <th style="text-align:center;width:50px;">숨기기</th>
+          <th class="admin-only" style="text-align:center;width:58px;">마스터</th>
         </tr></thead>
         <tbody id="invBody"></tbody>
       </table>
@@ -719,6 +694,12 @@ body.general-mode .text-blue { color:#16a34a; }
       <input type="number" id="zQty" min="1" value="1" style="width:100%;">
       <label style="font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">주기(주)</label>
       <input type="number" id="zCycle" min="1" value="3" style="width:80px;">
+      <label style="font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">회차</label>
+      <div style="display:flex;gap:3px;align-items:center;">
+        <input type="number" id="zCycleCurrent" min="1" placeholder="현재" style="width:58px;">
+        <span style="color:#64748b;">/</span>
+        <input type="number" id="zCycleTotal" min="1" placeholder="전체" style="width:58px;">
+      </div>
       <label style="font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">투여일수</label>
       <div style="display:flex;gap:4px;align-items:center;">
         <select id="zDayType" style="width:auto;" onchange="toggleDayInput()">
@@ -823,7 +804,9 @@ body.general-mode .text-blue { color:#16a34a; }
       </div>
       <div id="formularyInfo" class="hidden" style="padding:8px 10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;margin-bottom:8px;font-size:12px;color:#065f46;"></div>
       <div class="form-row admin-only">
-        <input type="text" id="newDrugCode" placeholder="약품코드" style="width:120px;">
+        <input type="text" id="newDrugCode" placeholder="약품코드 또는 물품코드" style="width:150px;"
+          oninput="fillMasterDrugFromCode()" onblur="fillMasterDrugFromCode()"
+          onkeydown="if(event.key==='Enter'){fillMasterDrugFromCode();addMasterDrug();}">
         <input type="text" id="newDrugName" placeholder="약품명" style="width:200px;">
         <input type="text" id="newDrugSpec" placeholder="규격" style="width:120px;">
         <input type="text" id="newDrugUnit" placeholder="단위" style="width:60px;" value="via">
@@ -1193,6 +1176,7 @@ async function enterApp() {
     state.drugMaster = BUILTIN_DRUGS.map(d => ({ code: d.code, name: d.name }));
   }
   init();
+  startLiveSync();
   // 통계 집계 백필: 기존 dailyData(최근 40일)로부터 AM/PM 집계를 재계산해 D1에 업로드
   // (외래 receiptTime/ampm 신규 추가 등 집계 함수 업데이트 시 자동 반영)
   if (appMode === 'admin' && authToken && state.dailyData && Object.keys(state.dailyData).length > 0) {
@@ -1203,7 +1187,10 @@ async function enterApp() {
 async function loadFromD1() {
   try {
     const res = await fetch(API_BASE + '/state?type=' + appDataType);
-    if (!res.ok) return;
+    if (!res.ok) {
+      restorePendingAfterLoadFailure();
+      return;
+    }
     const result = await res.json();
 
     if (result.data && result.data !== '{}') {
@@ -1212,6 +1199,33 @@ async function loadFromD1() {
       if (result.daily_data && result.daily_data !== '{}') {
         state.dailyData = JSON.parse(result.daily_data);
       }
+    }
+    _serverVersion = result.updated_at || null;
+    _lastSyncedState = makePersistedStateSnapshot(state);
+    _lastSyncedDailyData = cloneSyncData(state.dailyData || {});
+    _d1Hydrated = true;
+
+    const pending = readPendingSave(getPendingSaveStorage(), appDataType);
+    const resolved = resolvePendingOnLoad(pending, makePersistedStateSnapshot(state), state.dailyData || {}, _serverVersion);
+    if (resolved.action === 'clear') {
+      clearPendingSave(getPendingSaveStorage(), appDataType);
+    } else if (resolved.action === 'restore') {
+      const next = applyPendingRecordToMemory(state, resolved);
+      Object.keys(state).forEach(function(key) { delete state[key]; });
+      Object.assign(state, next);
+      writePendingSave(getPendingSaveStorage(), buildPendingSaveRecord(
+        appDataType,
+        pending && pending.base_updated_at,
+        next,
+        next.dailyData,
+        (pending && pending.seq) || 1,
+        { base: _lastSyncedState, baseDaily: _lastSyncedDailyData }
+      ));
+      if (resolved.conflicts && resolved.conflicts.length) {
+        updateSyncBadge('conflict');
+        toast('다른 사용자 변경 충돌: 최신 내용을 확인하세요.', 'error');
+      }
+      saveToD1();
     }
 
     // 제로관리약 마이그레이션: 진행 중 주기의 지난 Day 자동 완료
@@ -1224,6 +1238,7 @@ async function loadFromD1() {
   } catch (e) {
     console.warn('D1 로드 실패:', e);
     toast('데이터 로드에 실패했습니다. 인터넷 연결을 확인하세요.', 'error');
+    restorePendingAfterLoadFailure();
   }
 }
 // 반대편 타입의 마스터만 가져오기 (뉴스 매칭 + 의약품집 표시용)
@@ -2460,40 +2475,505 @@ function renderAmpmStats(sd) {
 
 // 연속 업로드 시 D1 요청 debounce (300ms 내 중복 요청 병합)
 let _d1SaveTimer = null;
-function saveToD1() {
-  if (appMode !== 'admin' || !authToken) return;
-  if (_d1SaveTimer) clearTimeout(_d1SaveTimer);
-  _d1SaveTimer = setTimeout(function() { _d1SaveTimer = null; _saveToD1Impl(); }, 300);
+let _d1Saving = false;
+let _d1SaveQueued = false;
+let _serverVersion = null;
+let _lastSyncedState = null;
+let _lastSyncedDailyData = null;
+let _liveSyncTimer = null;
+let _pendingRemotePayload = null;
+let _liveSyncEventsBound = false;
+let _pendingSaveSeq = 0;
+let _d1LastSaveFailed = false;
+let _d1Hydrated = false;
+
+function cloneSyncData(value) {
+  return JSON.parse(JSON.stringify(value == null ? {} : value));
 }
-async function _saveToD1Impl() {
-  if (appMode !== 'admin' || !authToken) return;
-  const daily = state.dailyData;
+
+function isSameSyncData(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function makePersistedStateSnapshot(source) {
+  const copy = cloneSyncData(source || {});
+  delete copy.dailyUsage;
+  delete copy.inpatientMix;
+  delete copy.outpatientData;
+  delete copy._dataType;
+  delete copy.dailyData;
+  return copy;
+}
+
+function mergeServerState(base, local, remote, baseDaily, localDaily, remoteDaily) {
+  const conflicts = [];
+  const keyed = { zeroDrugs: 'id', drugMaster: 'code', generalDrugMaster: 'code' };
+  const merged = {};
+  const allKeys = new Set(Object.keys(base || {}).concat(Object.keys(local || []), Object.keys(remote || {})));
+
+  function mergeValue(field, before, mine, latest) {
+    const mineChanged = !isSameSyncData(before, mine);
+    const latestChanged = !isSameSyncData(before, latest);
+    if (!mineChanged) return latest;
+    if (!latestChanged || isSameSyncData(mine, latest)) return mine;
+    conflicts.push(field);
+    return latest;
+  }
+
+  function mergeKeyed(field, keyName, beforeList, mineList, latestList) {
+    const beforeMap = new Map((beforeList || []).map(item => [String(item[keyName]), item]));
+    const mineMap = new Map((mineList || []).map(item => [String(item[keyName]), item]));
+    const latestMap = new Map((latestList || []).map(item => [String(item[keyName]), item]));
+    const ids = new Set(Array.from(beforeMap.keys()).concat(Array.from(mineMap.keys()), Array.from(latestMap.keys())));
+    const values = [];
+    ids.forEach(id => {
+      const value = mergeValue(field + ':' + id, beforeMap.get(id), mineMap.get(id), latestMap.get(id));
+      if (value !== undefined) values.push(value);
+    });
+    return values;
+  }
+
+  allKeys.forEach(field => {
+    if (keyed[field]) merged[field] = mergeKeyed(field, keyed[field], base?.[field], local?.[field], remote?.[field]);
+    else merged[field] = mergeValue(field, base?.[field], local?.[field], remote?.[field]);
+  });
+
+  const mergedDaily = mergeKeyed('dailyData', 'date',
+    Object.keys(baseDaily || {}).map(date => ({ date, value: baseDaily[date] })),
+    Object.keys(localDaily || {}).map(date => ({ date, value: localDaily[date] })),
+    Object.keys(remoteDaily || {}).map(date => ({ date, value: remoteDaily[date] })))
+    .reduce((out, item) => { out[item.date] = item.value; return out; }, {});
+
+  return { state: merged, dailyData: mergedDaily, conflicts };
+}
+
+function trimDailyDataForSave(daily) {
+  const src = daily || {};
+  const dKeys = Object.keys(src).sort();
+  const trimmed = {};
+  dKeys.slice(Math.max(0, dKeys.length - 40)).forEach(function(k) { trimmed[k] = src[k]; });
+  return trimmed;
+}
+
+function pendingSaveStorageKey(type) {
+  return 'pharmacy-pending-save:' + (type || '');
+}
+
+function buildPendingSaveRecord(type, baseUpdatedAt, source, dailyData, seq, extras) {
+  extras = extras || {};
+  const data = makePersistedStateSnapshot(source);
+  data._dataType = type;
+  const record = {
+    type: type,
+    base_updated_at: baseUpdatedAt || null,
+    seq: seq || 1,
+    ts: Date.now(),
+    data: data,
+    dailyData: trimDailyDataForSave(dailyData)
+  };
+  if (extras.base !== undefined) record.base = makePersistedStateSnapshot(extras.base);
+  if (extras.baseDaily !== undefined) record.baseDaily = cloneSyncData(extras.baseDaily || {});
+  return record;
+}
+
+function writePendingSave(storage, record) {
+  if (!storage || !record || !record.type) return false;
+  try {
+    storage.setItem(pendingSaveStorageKey(record.type), JSON.stringify(record));
+    return true;
+  } catch (e) {
+    try {
+      const slim = {
+        type: record.type,
+        base_updated_at: record.base_updated_at || null,
+        seq: record.seq || 1,
+        ts: record.ts || Date.now(),
+        data: record.data,
+        dailyData: record.dailyData
+      };
+      storage.setItem(pendingSaveStorageKey(record.type), JSON.stringify(slim));
+      return true;
+    } catch (e2) {
+      return false;
+    }
+  }
+}
+
+function readPendingSave(storage, type) {
+  if (!storage || !type) return null;
+  try {
+    const raw = storage.getItem(pendingSaveStorageKey(type));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || parsed.type !== type) return null;
+    if (!parsed.data || typeof parsed.data !== 'object' || Array.isArray(parsed.data)) return null;
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearPendingSave(storage, type) {
+  if (!storage || !type) return;
+  try { storage.removeItem(pendingSaveStorageKey(type)); } catch (e) {}
+}
+
+function pendingSaveFingerprint(record) {
+  if (!record) return '';
+  return JSON.stringify({ data: record.data || {}, dailyData: record.dailyData || {} });
+}
+
+function shouldClearPendingAfterSave(currentPending, sentFingerprint) {
+  if (!currentPending) return true;
+  return pendingSaveFingerprint(currentPending) === sentFingerprint;
+}
+
+function resolvePendingOnLoad(pending, serverState, serverDaily, serverUpdatedAt) {
+  if (!pending || typeof pending !== 'object' || !pending.data || typeof pending.data !== 'object') {
+    return { action: 'ignore' };
+  }
+  const serverSnap = makePersistedStateSnapshot(serverState);
+  if (pending.type) serverSnap._dataType = pending.type;
+  const trimmedServerDaily = trimDailyDataForSave(serverDaily || {});
+  if (isSameSyncData(pending.data, serverSnap) && isSameSyncData(pending.dailyData || {}, trimmedServerDaily)) {
+    return { action: 'clear' };
+  }
+  if (!serverUpdatedAt) {
+    return {
+      action: 'restore',
+      state: pending.data,
+      dailyData: pending.dailyData || {},
+      retry: true,
+      conflicts: []
+    };
+  }
+  const serverChanged = (pending.base_updated_at || null) !== serverUpdatedAt;
+  if (!serverChanged) {
+    return {
+      action: 'restore',
+      state: pending.data,
+      dailyData: pending.dailyData || {},
+      retry: true,
+      conflicts: []
+    };
+  }
+  const merged = mergeServerState(
+    pending.base || {},
+    pending.data,
+    makePersistedStateSnapshot(serverState),
+    pending.baseDaily || {},
+    pending.dailyData || {},
+    trimmedServerDaily
+  );
+  return {
+    action: 'restore',
+    state: merged.state,
+    dailyData: merged.dailyData,
+    retry: true,
+    conflicts: merged.conflicts || []
+  };
+}
+
+function applyPendingRecordToMemory(currentState, resolved) {
+  const current = currentState || {};
+  if (!resolved || resolved.action !== 'restore') return current;
+  const next = makePersistedStateSnapshot(Object.assign({}, current, resolved.state || {}));
+  next.dailyData = cloneSyncData(resolved.dailyData || {});
+  next.dailyUsage = current.dailyUsage;
+  next.inpatientMix = current.inpatientMix;
+  next.outpatientData = current.outpatientData;
+  delete next._dataType;
+  return next;
+}
+
+function shouldApplyRemoteNow(flags) {
+  flags = flags || {};
+  if (flags.saveTimer || flags.saving || flags.queued || flags.pending || flags.editing || flags.lastSaveFailed) return false;
+  return true;
+}
+
+function shouldKeepPendingRemotePayload(payload, serverVersion) {
+  if (!payload || !payload.updated_at) return false;
+  if (serverVersion && payload.updated_at <= serverVersion) return false;
+  return true;
+}
+
+function shouldApplyPendingRemotePayload(payload, serverVersion, flags) {
+  if (!shouldKeepPendingRemotePayload(payload, serverVersion)) return false;
+  return shouldApplyRemoteNow(flags || {});
+}
+
+function shouldOverwritePendingSave(existing, nextRecord, hydrated) {
+  if (!nextRecord) return false;
+  if (!existing) return true;
+  if (hydrated === false) return false;
+  return true;
+}
+
+function saveFlushPolicy(kind) {
+  if (kind === 'pagehide' || kind === 'hidden') return 'immediate';
+  return 'debounce';
+}
+
+function shouldRetrySaveOnVisible(pending, lastSaveFailed) {
+  return !!(pending || lastSaveFailed);
+}
+
+function shouldRefetchServerVersion(status, serverVersion, alreadyRefetched) {
+  if (alreadyRefetched) return false;
+  return status === 428 || serverVersion == null || serverVersion === '';
+}
+
+function buildPersistedPutPayload(source, type, dailyData) {
+  const snapshot = makePersistedStateSnapshot(source);
+  snapshot._dataType = type;
+  const trimmedDaily = trimDailyDataForSave(dailyData);
+  return {
+    data: JSON.stringify(snapshot),
+    daily_data: JSON.stringify(trimmedDaily),
+    snapshot: snapshot,
+    trimmedDaily: trimmedDaily
+  };
+}
+
+function getPendingSaveStorage() {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    return localStorage;
+  } catch (e) {
+    return null;
+  }
+}
+
+function capturePendingSnapshot() {
+  if (appMode !== 'admin' || !appDataType) return null;
+  _pendingSaveSeq += 1;
+  const record = buildPendingSaveRecord(
+    appDataType,
+    _serverVersion,
+    state,
+    state.dailyData,
+    _pendingSaveSeq,
+    { base: _lastSyncedState, baseDaily: _lastSyncedDailyData }
+  );
+  const existing = readPendingSave(getPendingSaveStorage(), appDataType);
+  if (!shouldOverwritePendingSave(existing, record, _d1Hydrated)) {
+    _pendingSaveSeq -= 1;
+    return existing;
+  }
+  if (!writePendingSave(getPendingSaveStorage(), record)) {
+    updateSyncBadge('fail', '브라우저 저장 공간 부족 — 페이지를 닫으면 미전송 데이터가 유실될 수 있습니다');
+  }
+  return record;
+}
+
+function currentRemoteApplyFlags() {
+  return {
+    saveTimer: !!_d1SaveTimer,
+    saving: !!_d1Saving,
+    queued: !!_d1SaveQueued,
+    pending: !!readPendingSave(getPendingSaveStorage(), appDataType),
+    lastSaveFailed: !!_d1LastSaveFailed,
+    editing: isUserEditing()
+  };
+}
+
+function discardStalePendingRemote() {
+  if (!shouldKeepPendingRemotePayload(_pendingRemotePayload, _serverVersion)) {
+    _pendingRemotePayload = null;
+  }
+}
+
+function consumePendingRemotePayload() {
+  const flags = currentRemoteApplyFlags();
+  const payload = _pendingRemotePayload;
+  if (!shouldKeepPendingRemotePayload(payload, _serverVersion)) {
+    _pendingRemotePayload = null;
+    return { applied: false };
+  }
+  if (!shouldApplyPendingRemotePayload(payload, _serverVersion, flags)) {
+    if (flags.pending || flags.saving || flags.queued || flags.saveTimer || flags.lastSaveFailed) saveToD1();
+    return { applied: false };
+  }
+  _pendingRemotePayload = null;
+  const remoteState = payload.data && payload.data !== '{}' ? JSON.parse(payload.data) : {};
+  const remoteDaily = payload.daily_data && payload.daily_data !== '{}' ? JSON.parse(payload.daily_data) : {};
+  applyRemoteState(remoteState, remoteDaily);
+  _serverVersion = payload.updated_at;
+  _lastSyncedState = makePersistedStateSnapshot(remoteState);
+  _lastSyncedDailyData = cloneSyncData(remoteDaily);
+  return { applied: true };
+}
+
+function restorePendingAfterLoadFailure() {
+  const pending = readPendingSave(getPendingSaveStorage(), appDataType);
+  const resolved = resolvePendingOnLoad(pending, {}, {}, null);
+  if (resolved.action !== 'restore') return false;
+  const next = applyPendingRecordToMemory(state, resolved);
+  Object.keys(state).forEach(function(key) { delete state[key]; });
+  Object.assign(state, next);
+  _d1Hydrated = true;
+  saveToD1();
+  return true;
+}
+
+function isUserEditing() {
+  const active = document.activeElement;
+  return !!(active && active.matches && active.matches('input, select, textarea, [contenteditable="true"]'));
+}
+
+function applyRemoteState(remoteState, remoteDaily) {
   const tempUsage = state.dailyUsage;
   const tempMix = state.inpatientMix;
   const tempOutpatient = state.outpatientData;
-  let dataStr = '';
+  Object.keys(state).forEach(key => delete state[key]);
+  Object.assign(state, cloneSyncData(remoteState || {}));
+  state.dailyData = cloneSyncData(remoteDaily || {});
+  state.dailyUsage = tempUsage;
+  state.inpatientMix = tempMix;
+  state.outpatientData = tempOutpatient;
+  renderAll();
+  if (document.querySelector('#tab-inventory.active')) renderInventory();
+  if (document.querySelector('#tab-usage.active')) renderUsage();
+  if (document.querySelector('#tab-forecast.active')) renderForecast();
+  if (document.querySelector('#tab-zero.active')) renderZeroDrugs();
+  if (document.querySelector('#tab-settings.active')) renderSettings();
+}
+
+async function pollRemoteState() {
+  if (appMode !== 'admin' || !appDataType || !_serverVersion || document.hidden) return;
+  try {
+    const res = await fetch(API_BASE + '/state?type=' + appDataType + '&since=' + encodeURIComponent(_serverVersion));
+    if (res.status === 304) {
+      if (_d1LastSaveFailed) saveToD1();
+      return;
+    }
+    if (!res.ok) return;
+    const result = await res.json();
+    if (!result.updated_at || result.updated_at === _serverVersion) return;
+    const flags = currentRemoteApplyFlags();
+    if (!shouldApplyRemoteNow(flags)) {
+      if (shouldKeepPendingRemotePayload(result, _serverVersion)) _pendingRemotePayload = result;
+      if (flags.pending || flags.saving || flags.queued || flags.saveTimer || flags.lastSaveFailed) saveToD1();
+      return;
+    }
+    const remoteState = result.data && result.data !== '{}' ? JSON.parse(result.data) : {};
+    const remoteDaily = result.daily_data && result.daily_data !== '{}' ? JSON.parse(result.daily_data) : {};
+    applyRemoteState(remoteState, remoteDaily);
+    _serverVersion = result.updated_at;
+    _lastSyncedState = makePersistedStateSnapshot(remoteState);
+    _lastSyncedDailyData = cloneSyncData(remoteDaily);
+    discardStalePendingRemote();
+    updateSyncBadge('ok', new Date(result.updated_at).getHours() + ':' + String(new Date(result.updated_at).getMinutes()).padStart(2, '0'));
+  } catch (e) { console.warn('원격 동기화 확인 실패:', e); }
+}
+
+function startLiveSync() {
+  if (_liveSyncTimer) clearInterval(_liveSyncTimer);
+  _liveSyncTimer = setInterval(pollRemoteState, 2000);
+  if (_liveSyncEventsBound) return;
+  _liveSyncEventsBound = true;
+  window.addEventListener('pagehide', function() { flushPendingSaveNow(); });
+  window.addEventListener('focus', function() {
+    const pending = readPendingSave(getPendingSaveStorage(), appDataType);
+    if (shouldRetrySaveOnVisible(pending, _d1LastSaveFailed)) saveToD1();
+    else pollRemoteState();
+  });
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      if (saveFlushPolicy('hidden') === 'immediate') flushPendingSaveNow();
+      return;
+    }
+    const pending = readPendingSave(getPendingSaveStorage(), appDataType);
+    if (shouldRetrySaveOnVisible(pending, _d1LastSaveFailed)) saveToD1();
+    else pollRemoteState();
+  });
+  document.addEventListener('focusout', function() {
+    setTimeout(function() { consumePendingRemotePayload(); }, 0);
+  });
+}
+
+function saveToD1() {
+  if (appMode !== 'admin' || !authToken) return;
+  capturePendingSnapshot();
+  if (_d1Saving) { _d1SaveQueued = true; return; }
+  if (_d1SaveTimer) clearTimeout(_d1SaveTimer);
+  _d1SaveTimer = setTimeout(function() { _d1SaveTimer = null; _saveToD1Impl(); }, 300);
+}
+
+function flushPendingSaveNow() {
+  if (appMode !== 'admin' || !authToken) return;
+  if (!readPendingSave(getPendingSaveStorage(), appDataType) && !_d1SaveTimer) return;
+  if (_d1SaveTimer) { clearTimeout(_d1SaveTimer); _d1SaveTimer = null; }
+  _saveToD1Impl();
+}
+
+async function refetchAndMergePending() {
+  const res = await fetch(API_BASE + '/state?type=' + appDataType);
+  if (!res.ok) return { ok: false };
+  const latest = await res.json();
+  const remoteState = latest.data && latest.data !== '{}' ? JSON.parse(latest.data) : {};
+  const remoteDaily = latest.daily_data && latest.daily_data !== '{}' ? JSON.parse(latest.daily_data) : {};
+  const pendingNow = readPendingSave(getPendingSaveStorage(), appDataType);
+  let resolved = null;
+  if (pendingNow) {
+    resolved = resolvePendingOnLoad(pendingNow, remoteState, remoteDaily, latest.updated_at || null);
+    if (resolved.action === 'clear') {
+      clearPendingSave(getPendingSaveStorage(), appDataType);
+    } else if (resolved.action === 'restore') {
+      const record = buildPendingSaveRecord(
+        appDataType,
+        latest.updated_at || null,
+        resolved.state,
+        resolved.dailyData,
+        pendingNow.seq || _pendingSaveSeq,
+        { base: remoteState, baseDaily: remoteDaily }
+      );
+      writePendingSave(getPendingSaveStorage(), record);
+    }
+  }
+  _serverVersion = latest.updated_at || null;
+  _lastSyncedState = makePersistedStateSnapshot(remoteState);
+  _lastSyncedDailyData = cloneSyncData(remoteDaily);
+  return { ok: true, resolved: resolved };
+}
+
+async function _saveToD1Impl() {
+  if (appMode !== 'admin' || !authToken) return;
+  if (_d1Saving) { _d1SaveQueued = true; return; }
+  _d1Saving = true;
+  _d1LastSaveFailed = false;
+  let retryAfterConflict = false;
+  let conflictDetected = false;
+  let resolvedState = null;
+  let resolvedDaily = null;
+  let versionRefetched = false;
   updateSyncBadge('syncing');
   try {
-    state.dailyData = {};
-    state.dailyUsage = [];
-    state.inpatientMix = [];
-    state.outpatientData = [];
-    state._dataType = appDataType; // 서버 사이드 타입 검증용
-    dataStr = JSON.stringify(state);
-    var dKeys = Object.keys(daily).sort();
-    var trimmedDaily = {};
-    dKeys.slice(Math.max(0, dKeys.length - 40)).forEach(function(k) { trimmedDaily[k] = daily[k]; });
-    // 장기 통계 배치: state.dailyData의 모든 날짜에 대해 AM/PM 집계 계산
+    if (shouldRefetchServerVersion(null, _serverVersion, versionRefetched)) {
+      const fetched = await refetchAndMergePending();
+      versionRefetched = true;
+      if (fetched.resolved && fetched.resolved.conflicts && fetched.resolved.conflicts.length) {
+        updateSyncBadge('conflict');
+        toast('다른 사용자 변경 충돌: 최신 내용을 확인하세요.', 'error');
+      }
+    }
+    const pending = readPendingSave(getPendingSaveStorage(), appDataType);
+    const payloadSource = pending && pending.data ? pending.data : state;
+    const payloadDaily = pending && pending.dailyData ? pending.dailyData : (state.dailyData || {});
+    const sentFingerprint = pendingSaveFingerprint(pending || buildPendingSaveRecord(appDataType, _serverVersion, payloadSource, payloadDaily, _pendingSaveSeq));
+    const payload = buildPersistedPutPayload(payloadSource, appDataType, payloadDaily);
+    var statsDaily = state.dailyData || {};
+    var dKeys = Object.keys(statsDaily).sort();
     var statsBatch = [];
     dKeys.forEach(function(k) {
-      var dd = daily[k] || {};
+      var dd = statsDaily[k] || {};
       if ((dd.inpatientMix && dd.inpatientMix.length > 0) || (dd.outpatientData && dd.outpatientData.length > 0)) {
         statsBatch.push({ date: k, stats: buildDailyStatsFull(dd.inpatientMix, dd.outpatientData) });
       }
     });
-    // 오늘(메모리) 데이터도 포함 — 단, dailyData[wdToday]에 실제 업로드 흔적이 있을 때만
     var wdToday = getWorkDate();
-    var todayUploaded = daily[wdToday] && ((daily[wdToday].inpatientMix && daily[wdToday].inpatientMix.length > 0) || (daily[wdToday].outpatientData && daily[wdToday].outpatientData.length > 0));
+    var todayUploaded = statsDaily[wdToday] && ((statsDaily[wdToday].inpatientMix && statsDaily[wdToday].inpatientMix.length > 0) || (statsDaily[wdToday].outpatientData && statsDaily[wdToday].outpatientData.length > 0));
     if (todayUploaded && !statsBatch.some(function(s) { return s.date === wdToday; })) {
       if ((state.inpatientMix && state.inpatientMix.length > 0) || (state.outpatientData && state.outpatientData.length > 0)) {
         statsBatch.push({ date: wdToday, stats: buildDailyStatsFull(state.inpatientMix, state.outpatientData) });
@@ -2507,31 +2987,101 @@ async function _saveToD1Impl() {
       },
       body: JSON.stringify({
         type: appDataType,
-        data: dataStr,
-        daily_data: JSON.stringify(trimmedDaily),
+        base_updated_at: _serverVersion,
+        data: payload.data,
+        daily_data: payload.daily_data,
         chemo_stats: appDataType === 'chemo' ? JSON.stringify(buildChemoStats(getWorkDate())) : undefined,
         daily_stats_batch: statsBatch.length > 0 ? JSON.stringify(statsBatch) : undefined,
       }),
     });
+    if (shouldRefetchServerVersion(res.status, _serverVersion, versionRefetched)) {
+      const fetched = await refetchAndMergePending();
+      versionRefetched = true;
+      if (fetched.resolved && fetched.resolved.action === 'restore') {
+        resolvedState = fetched.resolved.state;
+        resolvedDaily = fetched.resolved.dailyData;
+        if (fetched.resolved.conflicts && fetched.resolved.conflicts.length) {
+          updateSyncBadge('conflict');
+          toast('다른 사용자 변경 충돌: 최신 내용을 확인하세요.', 'error');
+        }
+      }
+      discardStalePendingRemote();
+      retryAfterConflict = true;
+      return;
+    }
+    if (res.status === 409) {
+      const latest = await res.json();
+      const remoteState = latest.data && latest.data !== '{}' ? JSON.parse(latest.data) : {};
+      const remoteDaily = latest.daily_data && latest.daily_data !== '{}' ? JSON.parse(latest.daily_data) : {};
+      const pendingNow = readPendingSave(getPendingSaveStorage(), appDataType) || pending;
+      const newerPendingExists = pendingNow && pendingSaveFingerprint(pendingNow) !== sentFingerprint;
+      const localState = pendingNow && pendingNow.data ? makePersistedStateSnapshot(pendingNow.data) : makePersistedStateSnapshot(payloadSource);
+      const localDaily = pendingNow && pendingNow.dailyData ? cloneSyncData(pendingNow.dailyData) : cloneSyncData(payloadDaily);
+      const merged = mergeServerState(_lastSyncedState || {}, localState, remoteState, _lastSyncedDailyData || {}, localDaily, remoteDaily);
+      _serverVersion = latest.updated_at || null;
+      _lastSyncedState = makePersistedStateSnapshot(remoteState);
+      _lastSyncedDailyData = cloneSyncData(remoteDaily);
+      resolvedState = merged.state;
+      resolvedDaily = merged.dailyData;
+      if (merged.conflicts.length) {
+        conflictDetected = true;
+        if (newerPendingExists) {
+          resolvedState = null;
+          resolvedDaily = null;
+        } else {
+          clearPendingSave(getPendingSaveStorage(), appDataType);
+          resolvedState = remoteState;
+          resolvedDaily = remoteDaily;
+        }
+        updateSyncBadge('conflict');
+        toast('다른 사용자 변경 충돌: 최신 내용을 확인하세요.', 'error');
+      } else {
+        writePendingSave(getPendingSaveStorage(), buildPendingSaveRecord(
+          appDataType,
+          _serverVersion,
+          merged.state,
+          merged.dailyData,
+          (pendingNow && pendingNow.seq) || _pendingSaveSeq,
+          { base: remoteState, baseDaily: remoteDaily }
+        ));
+      }
+      discardStalePendingRemote();
+      retryAfterConflict = true;
+      return;
+    }
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error('HTTP ' + res.status + ': ' + (errData.error || res.statusText));
     }
-    // 동기화 성공
+    const saved = await res.json();
+    _serverVersion = saved.updated_at || _serverVersion;
+    _lastSyncedState = makePersistedStateSnapshot(payload.snapshot);
+    _lastSyncedDailyData = cloneSyncData(payload.trimmedDaily);
+    const currentPending = readPendingSave(getPendingSaveStorage(), appDataType);
+    if (shouldClearPendingAfterSave(currentPending, sentFingerprint)) {
+      clearPendingSave(getPendingSaveStorage(), appDataType);
+    } else {
+      _d1SaveQueued = true;
+    }
+    discardStalePendingRemote();
     var now = new Date();
     var timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
     updateSyncBadge('ok', timeStr);
-    _longTermStatsCache = null; // 저장 성공 시 장기통계 캐시 무효화
-    // 통계 탭이 열려 있으면 재렌더 (처방의 매핑 변경 반영)
+    _longTermStatsCache = null;
     if (document.querySelector('#tab-stats.active') && typeof renderStats === 'function') renderStats();
   } catch (e) {
     console.warn('D1 저장 실패:', e);
+    _d1LastSaveFailed = true;
     updateSyncBadge('fail', e.message);
   } finally {
-    state.dailyData = daily;
-    state.dailyUsage = tempUsage;
-    state.inpatientMix = tempMix;
-    state.outpatientData = tempOutpatient;
+    if (retryAfterConflict && resolvedState) applyRemoteState(resolvedState, resolvedDaily);
+    _d1Saving = false;
+    if (conflictDetected) {
+      _d1SaveQueued = false;
+    } else if (retryAfterConflict || _d1SaveQueued) {
+      _d1SaveQueued = false;
+      saveToD1();
+    }
   }
 }
 
@@ -2553,6 +3103,12 @@ function updateSyncBadge(status, detail) {
     badge.textContent = '동기화됨 ' + (detail || '');
     badge.title = '클라우드 동기화 완료. 클릭하면 강제 재동기화';
     infoText = '마지막 클라우드 동기화: ' + (detail || '') + ' — 다른 기기에서 새로고침하면 반영됩니다.';
+  } else if (status === 'conflict') {
+    badge.style.background = 'rgba(245,158,11,.45)';
+    badge.style.color = '#fffbeb';
+    badge.textContent = '변경 충돌';
+    badge.title = '같은 항목을 다른 사용자가 변경했습니다. 최신 내용을 확인하세요.';
+    infoText = '다른 사용자가 같은 항목을 먼저 변경했습니다. 최신 내용을 적용했습니다.';
   } else {
     badge.style.background = 'rgba(239,68,68,.4)';
     badge.style.color = '#fee2e2';
@@ -2569,6 +3125,8 @@ function forceSyncToD1() {
     toast('관리자로 로그인 시에만 클라우드 동기화가 가능합니다.', 'error');
     return;
   }
+  capturePendingSnapshot();
+  if (_d1SaveTimer) { clearTimeout(_d1SaveTimer); _d1SaveTimer = null; }
   _saveToD1Impl();
 }
 
@@ -2621,6 +3179,7 @@ let state = {
   zeroDrugs: [],
   drugMaster: [],
   generalDrugMaster: [],
+  masterExcluded: [],
   uploadDates: { f1:'', f2:'', f3:'', f4:'' },
   dailyData: {},
   coldStorage: [],
@@ -2648,6 +3207,7 @@ function resetAllState() {
   state.zeroDrugs = [];
   state.drugMaster = [];
   state.generalDrugMaster = [];
+  state.masterExcluded = [];
   state.uploadDates = { f1:'', f2:'', f3:'', f4:'' };
   state.dailyData = {};
   state.coldStorage = [];
@@ -2671,9 +3231,6 @@ function resetAllState() {
   if (typeof _newsFilterTimer !== 'undefined' && _newsFilterTimer) { clearTimeout(_newsFilterTimer); _newsFilterTimer = null; }
   newsCurrentPage = 1;
   newsExpandedIdx = -1;
-  // 5) AI 챗봇 이력
-  _aiChatHistory = [];
-  if (document.getElementById('aiChatBody')) document.getElementById('aiChatBody').innerHTML = '';
   // 4) 제로관리약 UI
   _renderingZero = false;
   zeroSortMode = 'date';
@@ -2691,6 +3248,16 @@ function resetAllState() {
   _drugListCache = [];
   // 6) 타이머 / 인터랙션
   if (_d1SaveTimer) { clearTimeout(_d1SaveTimer); _d1SaveTimer = null; }
+  if (_liveSyncTimer) { clearInterval(_liveSyncTimer); _liveSyncTimer = null; }
+  _d1Saving = false;
+  _d1SaveQueued = false;
+  _d1LastSaveFailed = false;
+  _d1Hydrated = false;
+  _pendingSaveSeq = 0;
+  _serverVersion = null;
+  _lastSyncedState = null;
+  _lastSyncedDailyData = null;
+  _pendingRemotePayload = null;
   _resizeState = null;
 }
 
@@ -3087,7 +3654,9 @@ function parseInventory(wb) {
   });
   console.log('[1.xlsx] 파싱완료:', state.inventory.length, '품목, qty>0:', state.inventory.filter(function(r){return r.qty>0;}).length);
   if (state.inventoryFileType === '특수조제') {
-    toast('특수조제 파일 감지 - 항암제 목록만 표시됩니다', 'info');
+    toast(appDataType === 'chemo'
+      ? '특수조제 파일 감지 - 항암제 및 마스터 등록 약품만 표시됩니다'
+      : '특수조제 파일 감지 - 항암제 목록만 표시됩니다', 'info');
   } else {
     toast('일반조제 파일 감지 - 전체 약품 표시', 'info');
   }
@@ -3589,12 +4158,13 @@ function getFilteredZeroDrugs() {
 
 function getFilteredInventory() {
   let inv = state.inventory;
-  // 특수조제 파일인 경우 항암제 코드만 필터링
+  const masterCodes = getCurrentMasterCodes();
+  const excluded = new Set(state.masterExcluded || []);
+  // 특수조제: 일반약 모드는 ANTICANCER_CODES만.
   if (state.inventoryFileType === '특수조제') {
-    inv = inv.filter(r => ANTICANCER_CODES.has(r.code));
+    inv = inv.filter(r => ANTICANCER_CODES.has(r.code) || (appDataType === 'chemo' && masterCodes.has(r.code)));
   }
   // 현재 타입의 마스터만 필터링
-  const masterCodes = getCurrentMasterCodes();
   if (masterCodes.size > 0) {
     if (appDataType === 'chemo') {
       // 항암제 모드: 마스터 코드 OR 내장 항암제 코드(ANTICANCER_CODES) 포함
@@ -3604,7 +4174,7 @@ function getFilteredInventory() {
       inv = inv.filter(r => masterCodes.has(r.code));
     }
   }
-  return inv;
+  return inv.filter(r => !excluded.has(r.code));
 }
 
 // PHS 재고차이(잉여) 맵 가져오기
@@ -3834,7 +4404,7 @@ function renderInventory() {
   const coldSet = new Set(state.coldStorage || []);
   const tbody = document.getElementById('invBody');
   if (inv.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="text-center" style="padding:20px;color:#94a3b8;">데이터 없음. 1.xlsx를 업로드하세요.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center" style="padding:20px;color:#94a3b8;">데이터 없음. 1.xlsx를 업로드하세요.</td></tr>';
     document.getElementById('invSummary').textContent = '';
   } else {
     tbody.innerHTML = inv.map(r => {
@@ -3853,6 +4423,7 @@ function renderInventory() {
       <td class="text-center"><button class="cold-toggle ${isCold?'active':''}" onclick="toggleColdStorage('${r.code}')">${isCold?'냉장':'실온'}</button></td>
       <td class="num">${formatNum(r.price)}</td>
       <td class="text-center"><button class="btn btn-secondary btn-sm" onclick="hideDrug('${r.code}')" title="숨기기" style="padding:2px 6px;font-size:11px;">숨김</button></td>
+      <td class="text-center admin-only"><button class="btn btn-secondary btn-sm" onclick="removeInventoryMaster('${r.code}')" title="마스터에서 제외" style="padding:2px 6px;font-size:11px;">제외</button></td>
     </tr>`;
     }).join('');
     const totalSystem = inv.reduce((s,r) => s + r.systemQty * r.price, 0);
@@ -4329,6 +4900,7 @@ function getEffectiveNextDate(z) {
   const upcoming = candidates.find(d => d >= todayStr);
   if (upcoming) return upcoming;
   if (candidates[0]) return candidates[0]; // 경과 미투여 유지
+  if (getCycleLabel(z) && z.cycleCurrent >= z.cycleTotal) return '';
   if (z.nextDate) {
     const cycleDays = (z.cycleWeeks || 3) * 7;
     const firstDayNum = dayList.length ? Math.min.apply(null, dayList) : 1;
@@ -4350,6 +4922,13 @@ function getDayLabel(z) {
   return 'D1';
 }
 
+function getCycleLabel(z) {
+  const current = Number(z && z.cycleCurrent);
+  const total = Number(z && z.cycleTotal);
+  if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || total < 1 || current > total) return '';
+  return current + '/' + total;
+}
+
 function getDayCount(z) {
   if (!z.dayType || z.dayType === 'single') return 1;
   if (z.dayType === 'range') return z.dayEnd || 1;
@@ -4367,10 +4946,17 @@ function addZeroDrug() {
   const dayType = document.getElementById('zDayType').value;
   const dayEnd = parseInt(document.getElementById('zDayEnd').value) || 1;
   const dayPick = document.getElementById('zDayPick').value.trim();
+  const cycleCurrentRaw = document.getElementById('zCycleCurrent').value.trim();
+  const cycleTotalRaw = document.getElementById('zCycleTotal').value.trim();
+  const cycleCurrent = cycleCurrentRaw ? parseInt(cycleCurrentRaw) : null;
+  const cycleTotal = cycleTotalRaw ? parseInt(cycleTotalRaw) : null;
   const drugCode = drugSel.value;
   const drugName = document.getElementById('zDrugSearch').value.trim();
   if (!patient || !drugCode || !drugName || !lastDate) {
     toast('환자명, 약품, 투여시작일을 모두 입력하세요.', 'error'); return;
+  }
+  if ((cycleCurrentRaw || cycleTotalRaw) && !getCycleLabel({ cycleCurrent, cycleTotal })) {
+    toast('회차는 현재와 전체를 올바르게 함께 입력하세요.', 'error'); return;
   }
   // 입력 날짜 = 이번 주기 D1 시작일
   // 지난 Day 자동 완료 제거 → 미투약은 알람/필요수량에 남김 (migrateZeroDrugDonedays 정책과 동일)
@@ -4382,6 +4968,8 @@ function addZeroDrug() {
     drugCode: drugCode,
     drugName: drugName,
     cycleWeeks: cycle,
+    cycleCurrent: cycleCurrent || undefined,
+    cycleTotal: cycleTotal || undefined,
     qty,
     dayType, dayEnd, dayPick,
     lastDate: actualLast,
@@ -4397,6 +4985,8 @@ function addZeroDrug() {
   document.getElementById('zDrugSearch').value = '';
   document.getElementById('zDrug').value = '';
   document.getElementById('zLastDate').value = '';
+  document.getElementById('zCycleCurrent').value = '';
+  document.getElementById('zCycleTotal').value = '';
   document.getElementById('zDayType').value = 'single';
   toggleDayInput();
   toast('제로관리약 스케줄 등록!', 'success');
@@ -4446,6 +5036,8 @@ function autoAdvanceCycle(z) {
   const done = z.donedays || [];
   const allDone = dayList.every(d => done.includes(d));
   if (!allDone) return false;
+  const cycleLabel = getCycleLabel(z);
+  if (cycleLabel && z.cycleCurrent >= z.cycleTotal) return false;
   const todayStr = today();
   // 개별 이동(dayDates) 반영하여 {dayNum, date} 목록 → 가장 늦은 실제 날짜 찾기
   const resolved = dayList.map(dn => ({ dn, date: getDayDate(z, dn) })).filter(x => x.date);
@@ -4458,6 +5050,11 @@ function autoAdvanceCycle(z) {
   if (lastStr && (!z.lastAdminDate || lastStr > z.lastAdminDate)) {
     z.lastAdminDate = lastStr;
   }
+  if (!z.dosedates) z.dosedates = [];
+  done.forEach(dn => {
+    const ds = getDayDate(z, dn);
+    if (ds && z.dosedates.indexOf(ds) < 0) z.dosedates.push(ds);
+  });
   z.lastDate = z.nextDate;
   // 다음 주기 D1 = 실제 마지막 투여일 + (cycleDays - (dayNum - 1))
   // → 마지막 투여 요일이 그대로 주기 리듬에 반영됨
@@ -4465,6 +5062,7 @@ function autoAdvanceCycle(z) {
   const nx = parseLocalYmd(lastStr);
   nx.setDate(nx.getDate() + (cycleDays - (lastEntry.dn - 1)));
   z.nextDate = nx.getFullYear()+'-'+String(nx.getMonth()+1).padStart(2,'0')+'-'+String(nx.getDate()).padStart(2,'0');
+  if (cycleLabel) z.cycleCurrent += 1;
   z.donedays = [];
   z.dayDates = {}; // 새 주기 시작 → 오버라이드 초기화
   return true;
@@ -4580,13 +5178,24 @@ function toggleEditDay(id) {
 function saveEditDrug(id) {
   const z = state.zeroDrugs.find(d => d.id === id);
   if (!z) return;
+  const prevNext = z.nextDate;
+  const prevCycle = z.cycleWeeks;
+  const prevDayList = getDayList(z).slice();
   z.qty = parseInt(document.getElementById('eq-' + id).value) || 1;
   z.cycleWeeks = parseInt(document.getElementById('ec-' + id).value) || 3;
+  const currentRaw = document.getElementById('ecc-' + id).value.trim();
+  const totalRaw = document.getElementById('ect-' + id).value.trim();
+  const cycleCurrent = currentRaw ? parseInt(currentRaw) : null;
+  const cycleTotal = totalRaw ? parseInt(totalRaw) : null;
+  if ((currentRaw || totalRaw) && !getCycleLabel({ cycleCurrent, cycleTotal })) {
+    toast('회차는 현재와 전체를 올바르게 함께 입력하세요.', 'error'); return;
+  }
+  z.cycleCurrent = cycleCurrent || undefined;
+  z.cycleTotal = cycleTotal || undefined;
   z.dayType = document.getElementById('edt-' + id).value;
   z.dayEnd = parseInt(document.getElementById('ede-' + id).value) || 1;
   z.dayPick = document.getElementById('edp-' + id).value.trim();
   // 입력값 = 이번 주기 D1 시작일
-  const prevNext = z.nextDate;
   const startDate = document.getElementById('eld-' + id).value || z.nextDate || z.lastDate;
   z.nextDate = startDate;
   const prev = parseLocalYmd(startDate); prev.setDate(prev.getDate() - z.cycleWeeks * 7);
@@ -4601,8 +5210,13 @@ function saveEditDrug(id) {
     const prevDone = z.donedays || [];
     z.donedays = prevDone.map(Number).filter(dn => !Number.isNaN(dn) && newDayList.includes(dn));
   }
-  z.pastUndone = [];
-  z.dayDates = {};
+  const dayListChanged = prevDayList.length !== newDayList.length
+    || prevDayList.some((d, i) => d !== newDayList[i]);
+  if (startDate !== prevNext || z.cycleWeeks !== prevCycle || dayListChanged) {
+    z.pastUndone = [];
+    z.dayDates = {};
+    z.dosedates = [];
+  }
   z._zv2 = true;
   saveState();
   renderZeroDrugs();
@@ -4752,6 +5366,15 @@ function getLastAdminDate(z) {
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
   return '';
+}
+
+// 서버에 남아 있는 실제 마지막 투여일을 기준으로, 사라진 과거 체크 표시를 복원한다.
+// 날짜를 새로 기록하지 않으며 사용자가 직접 취소한 날짜는 항상 미체크로 유지한다.
+function isRecordedPastDoseDone(z, dateStr) {
+  if (!z || !dateStr) return false;
+  if ((z.historicalUncheckedDates || []).includes(dateStr)) return false;
+  if ((z.dosedates || []).includes(dateStr)) return true;
+  return !!(z.lastAdminDate && dateStr <= z.lastAdminDate);
 }
 
 // skipRender=true: DOM 동기화만 (resetAllState 등 데이터 비운 직후)
@@ -5099,7 +5722,7 @@ function renderZeroDrugs() {
         stockBadge = `<span style="font-size:10px;background:#dcfce7;color:#15803d;border-radius:3px;padding:1px 5px;font-weight:600;margin-left:5px;">재고 ${stockQty}</span>`;
       }
       html += `<div style="display:flex;justify-content:space-between;align-items:center;">`;
-      html += `<div style="font-weight:700;font-size:13px;color:#1e40af;">${z.drugName}${stockBadge}</div>`;
+      html += `<div style="font-weight:700;font-size:13px;color:#1e40af;">${z.drugName}${getCycleLabel(z) ? ' <span style="font-size:11px;color:#64748b;font-weight:600;">'+getCycleLabel(z)+'</span>' : ''}${stockBadge}</div>`;
       html += `<div style="display:flex;gap:4px;">`;
       html += `<button class="btn btn-secondary btn-sm" onclick="toggleEditDrug(${z.id})" style="padding:2px 8px;font-size:11px;">수정</button>`;
       html += `<button class="btn btn-danger btn-sm" onclick="removeZeroDrug(${z.id})" style="padding:2px 8px;font-size:11px;">삭제</button>`;
@@ -5109,6 +5732,7 @@ function renderZeroDrugs() {
       html += `<div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 8px;align-items:center;font-size:12px;">`;
       html += `<label style="font-weight:600;">처방량</label><input type="number" id="eq-${z.id}" value="${z.qty}" min="1" style="width:60px;padding:3px 6px;font-size:12px;">`;
       html += `<label style="font-weight:600;">주기(주)</label><input type="number" id="ec-${z.id}" value="${z.cycleWeeks}" min="1" style="width:60px;padding:3px 6px;font-size:12px;">`;
+      html += `<label style="font-weight:600;">회차</label><span><input type="number" id="ecc-${z.id}" value="${z.cycleCurrent||''}" min="1" placeholder="현재" style="width:52px;padding:3px 6px;font-size:12px;"> / <input type="number" id="ect-${z.id}" value="${z.cycleTotal||''}" min="1" placeholder="전체" style="width:52px;padding:3px 6px;font-size:12px;"></span>`;
       html += `<label style="font-weight:600;">투여일수</label>`;
       html += `<select id="edt-${z.id}" style="padding:3px;font-size:12px;" onchange="toggleEditDay(${z.id})">`;
       html += `<option value="single"${(z.dayType||'single')==='single'?' selected':''}>단일(D1)</option>`;
@@ -5129,7 +5753,8 @@ function renderZeroDrugs() {
       html += `<div style="font-size:11px;color:#64748b;margin:2px 0;line-height:1.4;">`;
       html += `${z.qty}개/일 x ${dayList.length}일 = 주기당 <b>${totalQty}개</b>`;
       html += ` | ${z.cycleWeeks}주 간격`;
-      html += ` | 마지막: ${getLastAdminDate(z) || '-'} | <b>다음: ${getEffectiveNextDate(z) || '-'}</b>`;
+      if (getCycleLabel(z)) html += ` | ${getCycleLabel(z)}`;
+      html += ` | <b>다음: ${getEffectiveNextDate(z) || '-'}</b>`;
       html += `</div>`;
       // Day별 투여 버튼
       html += `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;">`;
@@ -5165,6 +5790,7 @@ function renderZeroDrugs() {
     // 메모 슬라이드 (환자 단위)
     const memoText = [...new Set(g.drugs.map(d => d.memo).filter(m => m))].join('\n') || '';
     const memoDate = g.drugs.map(d => d.memoDate).filter(m => m).sort().pop() || '';
+    if (memoText) html += `<div class="zero-memo-preview" title="${escapeAttr(memoText)}" onclick="togglePatientMemo('${firstDrug.id}')">${escapeHtml(memoText)}</div>`;
     html += `<div class="memo-slide" id="memo-${firstDrug.id}" style="border-top:none;">`;
     html += `<textarea id="memoText-${firstDrug.id}" placeholder="메모를 입력하세요...">${memoText}</textarea>`;
     html += `<div class="memo-footer">`;
@@ -5359,6 +5985,7 @@ function renderMasterList() {
   if (_masterType === '항암제') list = list.filter(d => d._type === '항암제');
   else if (_masterType === '일반약') list = list.filter(d => d._type === '일반약');
   if (search) list = list.filter(d => d.code.toLowerCase().includes(search) || d.name.toLowerCase().includes(search));
+  list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
 
   document.getElementById('masterBody').innerHTML = list.map(d => {
     const typeBadge = d._type === '항암제'
@@ -5712,11 +6339,51 @@ function setNewsScope(scope) {
   applyNewsFilters();
 }
 
+function lookupMasterDrug(rawCode) {
+  const q = String(rawCode == null ? '' : rawCode).trim();
+  if (!q) return null;
+  const inv = (state && state.inventory) || [];
+  let hit = inv.find(r => r && r.code === q);
+  if (!hit) hit = inv.find(r => r && String(r.barcode || '') === q);
+  if (hit) {
+    // 물품코드로 찾아도 대표물품코드로 반환 — 재고 필터는 r.code 기준
+    return { code: hit.code, name: hit.name || '', spec: hit.spec || '', unit: hit.unit || '' };
+  }
+  const builtins = (typeof BUILTIN_DRUGS !== 'undefined' && BUILTIN_DRUGS) ? BUILTIN_DRUGS : [];
+  const b = builtins.find(d => d && d.code === q);
+  if (b) return { code: b.code, name: b.name || '', spec: b.spec || '', unit: b.unit || '' };
+  return null;
+}
+
+function fillMasterDrugFromCode() {
+  const codeEl = document.getElementById('newDrugCode');
+  if (!codeEl) return;
+  const found = lookupMasterDrug(codeEl.value);
+  if (!found) return;
+  codeEl.value = found.code;
+  const nameEl = document.getElementById('newDrugName');
+  const specEl = document.getElementById('newDrugSpec');
+  const unitEl = document.getElementById('newDrugUnit');
+  if (nameEl && !nameEl.value.trim()) nameEl.value = found.name;
+  if (specEl && !specEl.value.trim() && found.spec) specEl.value = found.spec;
+  if (unitEl && found.unit) {
+    const cur = (unitEl.value || '').trim();
+    if (!cur || cur === 'via') unitEl.value = found.unit;
+  }
+}
+
 function addMasterDrug() {
-  const code = document.getElementById('newDrugCode').value.trim();
-  const name = document.getElementById('newDrugName').value.trim();
-  const spec = document.getElementById('newDrugSpec').value.trim();
-  const unit = document.getElementById('newDrugUnit').value.trim();
+  let code = document.getElementById('newDrugCode').value.trim();
+  let name = document.getElementById('newDrugName').value.trim();
+  let spec = document.getElementById('newDrugSpec').value.trim();
+  let unit = document.getElementById('newDrugUnit').value.trim();
+  const found = lookupMasterDrug(code);
+  if (found) {
+    code = found.code;
+    if (!name) name = found.name;
+    if (!spec) spec = found.spec || spec;
+    if (!unit || unit === 'via') unit = found.unit || unit;
+  }
   if (!code || !name) { toast('약품코드와 약품명은 필수입니다.', 'error'); return; }
   // 양쪽 모두 중복 체크
   if (state.drugMaster.find(d => d.code === code) || (state.generalDrugMaster || []).find(d => d.code === code)) {
@@ -5734,12 +6401,13 @@ function addMasterDrug() {
   
   // 재고현황 탭 업데이트 (추가된 약품이 재고에 있으면 바로 표시)
   renderInventory();
-  renderUsageSurplus();
+  renderUsage();
   renderDashboard();
   
   document.getElementById('newDrugCode').value = '';
   document.getElementById('newDrugName').value = '';
   document.getElementById('newDrugSpec').value = '';
+  document.getElementById('newDrugUnit').value = 'via';
   toast(_masterType + ' 약품 추가됨!', 'success');
 }
 
@@ -5754,8 +6422,38 @@ function removeMasterDrug(code, type) {
   
   // 재고현황 탭 업데이트 (삭제된 약품이 재고에서 제외됨)
   renderInventory();
-  renderUsageSurplus();
+  renderUsage();
   renderDashboard();
+}
+
+function toggleInventoryMasterEditor() {
+  const editor = document.getElementById('inventoryMasterEditor');
+  if (!editor) return;
+  editor.style.display = editor.style.display === 'none' ? '' : 'none';
+  if (editor.style.display !== 'none') document.getElementById('inventoryMasterCode').focus();
+}
+
+function addInventoryMaster() {
+  const input = document.getElementById('inventoryMasterCode');
+  const found = lookupMasterDrug(input ? input.value : '');
+  if (!found) { toast('현재 재고에서 약품코드 또는 물품코드를 찾지 못했습니다.', 'error'); return; }
+  const list = appDataType === 'general' ? (state.generalDrugMaster || (state.generalDrugMaster = [])) : state.drugMaster;
+  if (list.some(d => d.code === found.code)) { toast('이미 마스터에 등록되어 있습니다.', 'info'); return; }
+  list.push(found);
+  state.masterExcluded = (state.masterExcluded || []).filter(code => code !== found.code);
+  saveState();
+  populateDrugSelects();
+  renderInventory();
+  renderUsage();
+  renderDashboard();
+  if (input) input.value = '';
+  toast('마스터에 추가했습니다.', 'success');
+}
+
+function removeInventoryMaster(code) {
+  if (!state.masterExcluded) state.masterExcluded = [];
+  if (!state.masterExcluded.includes(code)) state.masterExcluded.push(code);
+  removeMasterDrug(code, appDataType === 'general' ? '일반약' : '항암제');
 }
 
 function renderHistoryTable() {
@@ -5891,7 +6589,7 @@ function restoreData(e) {
 function clearAllData() {
   state = {
     inventory: [], dailyUsage: [], inpatientMix: [], outpatientData: [],
-    usageHistory: [], manualSurplus: [], zeroDrugs: [], drugMaster: [], generalDrugMaster: [],
+    usageHistory: [], manualSurplus: [], zeroDrugs: [], drugMaster: [], generalDrugMaster: [], masterExcluded: [],
     uploadDates: { f1:'', f2:'', f3:'', f4:'' }, dailyData: {}, coldStorage: [], hiddenDrugs: [],
     forecastUsage: { from:'', to:'', items:[] }, statsDeptOrder: []
   };
@@ -6261,32 +6959,25 @@ function collectCalEvents(year, month) {
     const dt = parseLocalYmd(dateStr);
     if (dt.getFullYear() !== year || dt.getMonth() !== month) return;
     if (!events[dateStr]) events[dateStr] = [];
-    if (events[dateStr].some(e => e.zid===ev.zid && e.dayNum===ev.dayNum)) return;
+    if (events[dateStr].some(e => e.zid===ev.zid && e.dayNum===ev.dayNum && e.date===dateStr)) return;
     events[dateStr].push(ev);
   }
   getFilteredZeroDrugs().forEach(z => {
     const dayList = getDayList(z);
     const done = z.donedays || [];
-    // 현재 주기
+    const dosedates = z.dosedates || [];
     dayList.forEach(d => {
       const dateStr = getDayDate(z, d);
-      pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:done.includes(d), zid:z.id });
+      pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:done.includes(d), zid:z.id, date:dateStr, cycleLabel:getCycleLabel(z) });
     });
-    // lastDate는 로컬 YMD
     if (z.lastDate) {
       dayList.forEach(d => {
         const dateStr = addDays(z.lastDate, d - 1);
-        let pastDone;
-        if (dateStr <= todayStr) {
-          pastDone = !(z.pastUndone && z.pastUndone.includes(d+'|'+z.lastDate));
-        } else {
-          pastDone = (z.donedays || []).includes(d);
-        }
-        pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:pastDone, past:true, pastCycleDate:z.lastDate, zid:z.id });
+        pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:isRecordedPastDoseDone(z, dateStr), past:true, pastCycleDate:z.lastDate, zid:z.id, date:dateStr });
       });
     }
     // 요청 월까지 미래 주기. dayDates는 현재 주기만. 오늘 이전 미래주기는 그리지 않음.
-    if (z.nextDate) {
+    if (z.nextDate && !(getCycleLabel(z) && z.cycleCurrent >= z.cycleTotal)) {
       const cycleDays = (z.cycleWeeks || 3) * 7;
       const monthStart = year + '-' + String(month + 1).padStart(2, '0') + '-01';
       const lastDom = new Date(year, month + 1, 0).getDate();
@@ -6298,13 +6989,15 @@ function collectCalEvents(year, month) {
       const maxDist = Math.max(Math.abs(toStart), Math.abs(toEnd)) + maxOff;
       const maxCycles = Math.min(Math.ceil(maxDist / Math.max(cycleDays, 1)) + 2, 500);
       for (let c = 1; c <= maxCycles; c++) {
+        if (getCycleLabel(z) && z.cycleCurrent + c > z.cycleTotal) break;
         let anyInOrBefore = false;
         dayList.forEach(d => {
           const dateStr = addDays(z.nextDate, c * cycleDays + (d - 1));
           const dt = parseLocalYmd(dateStr);
           if (dt.getFullYear() < year || (dt.getFullYear() === year && dt.getMonth() <= month)) anyInOrBefore = true;
           if (dateStr < todayStr) return;
-          pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:false, future:true, zid:z.id });
+          const futureCycle = getCycleLabel(z) ? (z.cycleCurrent + c) + '/' + z.cycleTotal : '';
+          pushEvent(dateStr, { patient:z.patient, regNo:z.regNo||'', drugName:z.drugName, qty:z.qty, dayNum:d, done:false, future:true, zid:z.id, date:dateStr, cycleLabel:futureCycle });
         });
         if (!anyInOrBefore) break;
       }
@@ -6355,14 +7048,12 @@ function buildMonthTable(year, month, events) {
           });
           Object.values(byPatient).forEach(pg => {
             const allDone = pg.items.every(e=>e.done);
-            const anyUrgent = !allDone && dateStr<=todayStr;
+            const anyUrgent = dateStr<=todayStr && pg.items.some(e => !e.done && !e.future && !e.past);
             const cls = allDone?'done':(anyUrgent?'urgent':'');
-            // 현재/과거 미투여만 이동 (다음 주기 날짜는 nextDate를 건드리지 않음)
-            const canMove = pg.items.some(e => !e.done && !e.future);
+            const canMove = pg.items.some(e => !e.done && !e.future && !e.past);
             const isSelected = _moveData && _moveData.patient === pg.patient && _moveData.regNo === pg.regNo && _moveData.fromDate === dateStr;
             const selCls = isSelected ? ' selected-move' : '';
             html += `<div class="cal-item ${cls}${selCls}">`;
-            // 이동 버튼 (미투여만, 이동모드 아닐 때)
             if (canMove && !_moveData) {
               const safeP = escapeAttr(pg.patient);
               const safeR = escapeAttr(pg.regNo);
@@ -6373,22 +7064,15 @@ function buildMonthTable(year, month, events) {
             pg.items.forEach(ev => {
               const dn = ev.drugName.length>15?ev.drugName.slice(0,15)+'..':ev.drugName;
               const doneIcon = ev.done?'[v]':'[ ]';
+              const cycleLabel = ev.cycleLabel || '';
               const lineStyle = ev.done?'text-decoration:line-through;opacity:.6;':'';
               if (_moveData) {
-                // 이동 모드: 클릭 이벤트 없음 (td로 전파되어야 함)
                 html += `<div style="${lineStyle}">`;
-                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}</span>`;
-                html += `</div>`;
-              } else if (ev.future) {
-                html += `<div style="cursor:default;${lineStyle}" onclick="event.stopPropagation();toast('다음 주기 예정','info')" title="다음 주기 예정">`;
-                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}</span> <span class="cal-future-label" style="color:#94a3b8;font-size:9px;">(다음주기)</span>`;
+                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}${cycleLabel ? ' '+cycleLabel : ''}</span>`;
                 html += `</div>`;
               } else {
-                // 일반 모드: 투여 완료/취소 클릭
-                const pastArg = ev.past?'true':'false';
-                const pastDateArg = ev.pastCycleDate?"'"+ev.pastCycleDate+"'":"''";
-                html += `<div style="cursor:pointer;${lineStyle}" onclick="event.stopPropagation();calToggleDose('${escapeAttr(ev.patient)}','${escapeAttr(ev.drugName)}',${ev.dayNum},${ev.done?'true':'false'},${pastArg},${pastDateArg})" title="${ev.done?'클릭: 투여취소':'클릭: 투여완료'}">`;
-                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}</span>${ev.past?' <span class="cal-past-label" style="color:#94a3b8;font-size:9px;">(전주기)</span>':''}`;
+                html += `<div style="cursor:pointer;${lineStyle}" onclick="event.stopPropagation();calToggleDose(${JSON.stringify(ev.zid)},${JSON.stringify(ev.dayNum)},'${dateStr}',${ev.done?'true':'false'})" title="${ev.done?'클릭: 투여취소':'클릭: 투여완료'}">`;
+                html += `<span class="cal-done-icon" style="font-size:13px;">${doneIcon}</span> <span class="ci-drug">${escapeHtml(dn)}</span> <span class="ci-qty">${ev.qty}개</span> <span style="color:#64748b;">D${ev.dayNum}${cycleLabel ? ' '+cycleLabel : ''}</span>`;
                 html += `</div>`;
               }
             });
@@ -6483,17 +7167,15 @@ function calClickDate(toDate) {
   const zList = state.zeroDrugs.filter(z => z.patient === patient && (z.regNo||'') === regNo);
   if (zList.length === 0) { calCancelMove(); return; }
 
-  const fromD = new Date(fromDate), toD = new Date(toDate);
-  const diffDays = daysBetween(fromD, toD);
+  const diffDays = daysBetween(parseLocalYmd(fromDate), parseLocalYmd(toDate));
 
   function fmtD(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
 
   console.log('[이동] zList:', zList.length, '개 약품, diffDays:', diffDays);
   zList.forEach(z => {
     const dayList = getDayList(z);
-    const cycleDays = (z.cycleWeeks || 3) * 7;
+    const firstDay = dayList.length ? Math.min.apply(null, dayList) : 1;
 
-    // 현재 주기에서 fromDate에 해당하는 Day를 먼저 찾음
     let clickedDay = null;
     for (const dn of dayList) {
       if (getDayDate(z, dn) === fromDate) { clickedDay = dn; break; }
@@ -6504,8 +7186,9 @@ function calClickDate(toDate) {
         console.log('[이동] D' + clickedDay + ' 이미 완료 — 건너뜀');
         return;
       }
-      if (done.length === 0) {
-        // 아무 Day도 체크 안 됨 → 전체 주기를 diffDays만큼 함께 이동
+      // 첫날은 다른 Day가 체크돼 있어도 nextDate(주기 전체)를 이동
+      if (clickedDay === firstDay || done.length === 0) {
+        if (!z.nextDate) return;
         const nn = parseLocalYmd(z.nextDate); nn.setDate(nn.getDate() + diffDays);
         z.nextDate = fmtD(nn);
         if (z.dayDates) {
@@ -6516,56 +7199,13 @@ function calClickDate(toDate) {
           });
           z.dayDates = nd;
         }
-        console.log('[이동] 현재주기 전체이동(미체크):', diffDays, '일');
+        console.log('[이동] 현재주기 전체이동:', diffDays, '일');
       } else {
-        // 체크된 Day 고정 → 클릭한 Day만 개별 오버라이드
         if (!z.dayDates) z.dayDates = {};
         z.dayDates[clickedDay] = toDate;
-        console.log('[이동] D' + clickedDay + ' 개별이동(체크된 Day 고정):', fromDate, '->', toDate);
+        console.log('[이동] D' + clickedDay + ' 개별이동:', fromDate, '->', toDate);
       }
       return;
-    }
-
-    // 현재/과거 주기만 탐색. 미래 주기·미발견은 nextDate/donedays를 건드리지 않음
-    function findCycleContaining(baseDate, searchDate) {
-      let base = new Date(baseDate);
-      for (let attempt = 0; attempt < 12; attempt++) {
-        const first = new Date(base);
-        first.setDate(first.getDate() + (dayList[0] - 1));
-        const last = new Date(base);
-        last.setDate(last.getDate() + (dayList[dayList.length-1] - 1));
-        if (searchDate >= fmtD(first) && searchDate <= fmtD(last)) {
-          return { base: fmtD(base), isNext: (fmtD(base) === z.nextDate), isLast: (fmtD(base) === z.lastDate) };
-        }
-        base.setDate(base.getDate() - cycleDays);
-      }
-      return null;
-    }
-
-    const cycle = findCycleContaining(z.nextDate, fromDate);
-    console.log('[이동]', z.drugName, 'nextDate:', z.nextDate, 'lastDate:', z.lastDate, 'foundCycle:', JSON.stringify(cycle));
-
-    if (!cycle) return;
-    if (cycle.isNext) {
-      const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
-      console.log('[이동] nextDate 이동:', z.nextDate, '->', fmtD(nn));
-      z.nextDate = fmtD(nn);
-      z.donedays = [];
-    } else if (cycle.isLast) {
-      const nl = new Date(z.lastDate); nl.setDate(nl.getDate() + diffDays);
-      const nn = new Date(z.nextDate); nn.setDate(nn.getDate() + diffDays);
-      console.log('[이동] lastDate 이동:', z.lastDate, '->', fmtD(nl), ', nextDate:', z.nextDate, '->', fmtD(nn));
-      z.lastDate = fmtD(nl);
-      z.nextDate = fmtD(nn);
-      z.donedays = [];
-    } else {
-      const oldBase = new Date(cycle.base);
-      const newBase = new Date(oldBase); newBase.setDate(newBase.getDate() + diffDays);
-      z.lastDate = fmtD(newBase);
-      const nn = new Date(newBase); nn.setDate(nn.getDate() + cycleDays);
-      z.nextDate = fmtD(nn);
-      z.donedays = [];
-      console.log('[이동] 이전주기 이동 → lastDate:', z.lastDate, ', nextDate:', z.nextDate);
     }
   });
 
@@ -6575,42 +7215,80 @@ function calClickDate(toDate) {
   toast(patient + ' 일정 → ' + toDate + ' 로 이동!', 'success');
 }
 
-// 달력에서 투여 완료/취소 토글
-function calToggleDose(patient, drugName, dayNum, isDone, isPast, pastCycleDate) {
-  const z = state.zeroDrugs.find(d => d.patient === patient && d.drugName === drugName);
+function calToggleDose(zid, dayNum, dateStr, isDone) {
+  if (zid == null || zid === '') return;
+  const z = state.zeroDrugs.find(d => String(d.id) === String(zid));
   if (!z) { toast('환자를 찾을 수 없습니다', 'error'); return; }
 
-  if (isPast) {
-    // 과거 주기 토글
-    if (!z.pastUndone) z.pastUndone = [];
-    const key = dayNum + '|' + pastCycleDate;
-    if (isDone) {
-      // 완료 → 취소
-      if (!z.pastUndone.includes(key)) z.pastUndone.push(key);
-      toast(patient + ' 과거 D' + dayNum + ' 투여 취소', 'info');
-    } else {
-      // 취소 → 다시 완료
-      z.pastUndone = z.pastUndone.filter(k => k !== key);
-      toast(patient + ' 과거 D' + dayNum + ' 투여 복원', 'success');
-    }
-  } else {
-    // 현재 주기 토글
-    if (!z.donedays) z.donedays = [];
-    const dayList = getDayList(z);
+  function addDays(ymd, n) {
+    if (!ymd) return '';
+    const d = parseLocalYmd(ymd);
+    d.setDate(d.getDate() + n);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function markDone() {
+    if (dateStr && (!z.lastAdminDate || dateStr > z.lastAdminDate)) z.lastAdminDate = dateStr;
+    toast(z.patient + ' D' + dayNum + ' 투여 완료!', 'success');
+  }
 
+  const currentDate = getDayDate(z, dayNum);
+  if (currentDate && currentDate === dateStr) {
+    if (!z.donedays) z.donedays = [];
     if (isDone) {
       z.donedays = z.donedays.filter(d => d !== dayNum);
-      toast(patient + ' D' + dayNum + ' 투여 취소', 'info');
+      toast(z.patient + ' D' + dayNum + ' 투여 취소', 'info');
     } else {
       if (!z.donedays.includes(dayNum)) z.donedays.push(dayNum);
-      const adminDate = getDayDate(z, dayNum);
-      if (adminDate && (!z.lastAdminDate || adminDate > z.lastAdminDate)) {
-        z.lastAdminDate = adminDate;
-      }
-      toast(patient + ' D' + dayNum + ' 투여 완료!', 'success');
-      // 이번 주기 마지막 날 지나 있으면 즉시 다음 주기로 이동
+      markDone();
       autoAdvanceCycle(z);
     }
+    saveState();
+    renderZeroDrugs();
+    return;
+  }
+
+  if (z.nextDate) {
+    const cycleDays = (z.cycleWeeks || 3) * 7;
+    for (let c = 1; c <= 500; c++) {
+      const cycleD1 = addDays(z.nextDate, c * cycleDays);
+      const thisDate = addDays(z.nextDate, c * cycleDays + (dayNum - 1));
+      if (thisDate === dateStr) {
+        if (getCycleLabel(z) && z.cycleCurrent + c > z.cycleTotal) return;
+        if (!z.dosedates) z.dosedates = [];
+        (z.donedays || []).forEach(dn => {
+          const ds = getDayDate(z, dn);
+          if (ds && z.dosedates.indexOf(ds) < 0) z.dosedates.push(ds);
+        });
+        z.lastDate = addDays(z.nextDate, (c - 1) * cycleDays);
+        z.nextDate = cycleD1;
+        if (getCycleLabel(z)) z.cycleCurrent += c;
+        z.donedays = [];
+        z.dayDates = {};
+        if (!isDone) {
+          z.donedays = [dayNum];
+          markDone();
+          autoAdvanceCycle(z);
+        }
+        saveState();
+        renderZeroDrugs();
+        return;
+      }
+      if (cycleD1 > dateStr) break;
+    }
+  }
+
+  if (!z.dosedates) z.dosedates = [];
+  if (isDone) {
+    z.dosedates = z.dosedates.filter(d => d !== dateStr);
+    if (z.lastAdminDate && dateStr <= z.lastAdminDate) {
+      if (!z.historicalUncheckedDates) z.historicalUncheckedDates = [];
+      if (!z.historicalUncheckedDates.includes(dateStr)) z.historicalUncheckedDates.push(dateStr);
+    }
+    toast(z.patient + ' D' + dayNum + ' 투여 취소', 'info');
+  } else {
+    if (!z.dosedates.includes(dateStr)) z.dosedates.push(dateStr);
+    if (z.historicalUncheckedDates) z.historicalUncheckedDates = z.historicalUncheckedDates.filter(d => d !== dateStr);
+    markDone();
   }
   saveState();
   renderZeroDrugs();
@@ -7221,312 +7899,6 @@ function escapeAttr(str) {
   return str.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/`/g,'\\`');
 }
 
-// ============================================================
-// AI 챗봇
-// ============================================================
-let _aiChatOpen = false;
-let _aiSending = false;
-let _aiChatHistory = []; // 멀티턴: [{role:'user'|'assistant', content:'...'}]
-
-function toggleAiChat() {
-  _aiChatOpen = !_aiChatOpen;
-  document.getElementById('aiChatPanel').classList.toggle('open', _aiChatOpen);
-  if (_aiChatOpen) {
-    document.getElementById('aiInput').focus();
-    _aiUpdateModeDisplay();
-    // 첫 열기 시 환영 메시지
-    var body = document.getElementById('aiChatBody');
-    if (body.children.length === 0) {
-      var mode = appDataType === 'chemo' ? '항암제' : '일반약';
-      _aiAppendBubble('ai', mode + ' 관리 모드 AI입니다.\n' + mode + ' 재고/뉴스/수요 관련 질문을 해주세요.\n(다른 분류 약품은 모드 전환 후 질문해주세요)');
-    }
-  }
-}
-
-function _aiUpdateModeDisplay() {
-  var badge = document.getElementById('aiModeBadge');
-  var sub = document.getElementById('aiChatSub');
-  if (badge) {
-    badge.textContent = appDataType === 'chemo' ? '항암제 모드' : '일반약 모드';
-    badge.style.background = appDataType === 'chemo' ? 'rgba(239,68,68,.3)' : 'rgba(34,197,94,.3)';
-  }
-  if (sub) sub.textContent = 'Grok 4.1 Fast | Multi-Agent';
-}
-
-function clearAiChat() {
-  _aiChatHistory = [];
-  document.getElementById('aiChatBody').innerHTML = '';
-  _aiUpdateModeDisplay();
-  var mode = appDataType === 'chemo' ? '항암제' : '일반약';
-  _aiAppendBubble('ai', '대화를 초기화했습니다. ' + mode + ' 모드 AI가 준비되었습니다.');
-}
-
-function _aiAppendBubble(role, text) {
-  var body = document.getElementById('aiChatBody');
-  var div = document.createElement('div');
-  div.className = 'ai-bubble ai-bubble-' + role;
-  div.textContent = text;
-  body.appendChild(div);
-  body.scrollTop = body.scrollHeight;
-}
-
-function _aiAppendMemoryTag(text) {
-  var body = document.getElementById('aiChatBody');
-  var tag = document.createElement('div');
-  tag.className = 'ai-memory-tag';
-  tag.textContent = 'memorized: ' + text;
-  body.appendChild(tag);
-  body.scrollTop = body.scrollHeight;
-}
-
-function _aiGetCurrentTab() {
-  var tabs = ['dashboard','inventory','usage','forecast','zero','news','settings'];
-  var names = { dashboard:'대시보드', inventory:'재고현황', usage:'사용량/잉여', forecast:'수요예측', zero:'제로관리약', news:'공급뉴스', settings:'설정' };
-  for (var i = 0; i < tabs.length; i++) {
-    var el = document.getElementById('tab-' + tabs[i]);
-    if (el && el.classList.contains('active')) return names[tabs[i]] || tabs[i];
-  }
-  return '대시보드';
-}
-
-// 현재 모드에 맞는 약품 목록만 필터링
-function _aiGetFilteredDrugList() {
-  var dm = state.drugMaster || [];
-  var gdm = state.generalDrugMaster || [];
-  if (appDataType === 'chemo') {
-    return dm.map(function(d) { return { code: d.code || d.ediCode || '', name: (d.name || d.drugName || '').substring(0, 40) }; });
-  } else {
-    // 일반약 모드: 일반약 마스터만
-    return gdm.map(function(d) { return { code: d.code || d.ediCode || '', name: (d.name || d.drugName || '').substring(0, 40) }; });
-  }
-}
-
-// 현재 모드에 맞는 뉴스만 필터링 - newsData에서 직접 읽어서 원내 매칭된 것만 반환
-function _aiGetFilteredNews() {
-  if (!newsData || !newsData.items) return [];
-  var result = [];
-  try {
-    // 매칭 캐시 초기화
-    if (!_newsMatchCache) _newsMatchCache = buildNewsMatchCache();
-    newsData.items.forEach(function(n) {
-      var matched = null;
-      try { matched = getMatchedHospitalDrug(n); } catch(e) {}
-      if (matched) {
-        result.push({
-          title: (n.title || '').substring(0, 80),
-          date: n.date || '',
-          category: n.categoryLabel || n.category || '',
-          matchedDrug: matched.name || '',
-          matchedCode: matched.code || '',
-          summary: (n.summary || '').substring(0, 100)
-        });
-      }
-    });
-  } catch(e) { /* skip */ }
-  return result.slice(0, 20);
-}
-
-function _aiBuildContext() {
-  var inv = state.inventory || [];
-  var dm = state.drugMaster || [];
-  var gdm = state.generalDrugMaster || [];
-  var dailyData = state.dailyData || {};
-  var fu = state.forecastUsage || { from:'', to:'', items:[] };
-
-  // 현재 모드에 맞는 재고만 필터링
-  var masterCodes = {};
-  if (appDataType === 'chemo') {
-    dm.forEach(function(d) { masterCodes[(d.code || d.ediCode || '').toUpperCase()] = true; });
-  } else {
-    gdm.forEach(function(d) { masterCodes[(d.code || d.ediCode || '').toUpperCase()] = true; });
-  }
-
-  // 날짜별 사용량 데이터 수집 (dailyData에서)
-  var allDates = Object.keys(dailyData).sort();
-  var recentDates = allDates.slice(-14); // 최근 14일
-
-  // 사용량 파일 기반 일평균 계산 (더 정확)
-  var usageMapFromFile = {};
-  var usageDaysCount = 0;
-  recentDates.forEach(function(d) {
-    var du = dailyData[d]?.dailyUsage || [];
-    if (du.length > 0) {
-      usageDaysCount++;
-      du.forEach(function(u) {
-        usageMapFromFile[u.code] = (usageMapFromFile[u.code] || 0) + (u.total || 0);
-      });
-    }
-  });
-  // 일평균으로 변환
-  if (usageDaysCount > 0) {
-    Object.keys(usageMapFromFile).forEach(function(code) {
-      usageMapFromFile[code] = Math.round((usageMapFromFile[code] / usageDaysCount) * 10) / 10;
-    });
-  }
-
-  // 재고 감소량 기반 일평균 (사용량 파일 없을 때 폴백)
-  var usageMapFromStock = {};
-  var stockDates = allDates.slice(-7);
-  if (stockDates.length >= 2) {
-    var oldestInv = dailyData[stockDates[0]]?.inventory || [];
-    var latestInv = dailyData[stockDates[stockDates.length-1]]?.inventory || [];
-    var oldMap = {};
-    oldestInv.forEach(function(d) { oldMap[d.code] = d.qty || 0; });
-    latestInv.forEach(function(d) {
-      var diff = (oldMap[d.code] || 0) - (d.qty || 0);
-      // 재고 감소 = 사용 - 입고. 음수(재고 증가)는 입고가 있었다는 의미이므로 0으로 처리
-      if (diff > 0) usageMapFromStock[d.code] = Math.round((diff / stockDates.length) * 10) / 10;
-    });
-  }
-
-  // 최종 일평균: 사용량 파일 우선, 없으면 재고 감소량 사용
-  var usageMap = usageDaysCount > 0 ? usageMapFromFile : usageMapFromStock;
-  var usageSource = usageDaysCount > 0 ? '사용량파일(' + usageDaysCount + '일)' : '재고감소량(' + stockDates.length + '일)';
-
-  // 기간별 소모량(forecastUsage) 일평균 계산
-  var forecastUsageMap = {};
-  var forecastPeriodDays = 0;
-  if (fu.from && fu.to && fu.items && fu.items.length > 0) {
-    var d1 = new Date(fu.from), d2 = new Date(fu.to);
-    forecastPeriodDays = Math.max(1, Math.round((d2 - d1) / 86400000) + 1);
-    fu.items.forEach(function(item) {
-      forecastUsageMap[item.code] = Math.round((item.total / forecastPeriodDays) * 10) / 10;
-    });
-  }
-
-  var inventorySummary;
-  var hasMaster = Object.keys(masterCodes).length > 0;
-  var buildItem = function(d) {
-    var code = d.code || '';
-    var qty = d.qty != null ? d.qty : 0;
-    // 우선순위: 기간소모량 > 사용량파일 > 재고감소량
-    var dailyUsage = forecastUsageMap[code] || usageMap[code] || 0;
-    var daysLeft = dailyUsage > 0 ? Math.round(qty / dailyUsage) : 999;
-    return { code: code, name: (d.name || '').substring(0, 40), qty: qty, dailyUsage: dailyUsage, daysLeft: daysLeft };
-  };
-
-  if (hasMaster) {
-    inventorySummary = inv.filter(function(d) {
-      return masterCodes[(d.code || '').toUpperCase()];
-    }).map(buildItem);
-  } else {
-    inventorySummary = inv.map(buildItem);
-  }
-
-  // 현재 알림 수집
-  var recentAlerts = [];
-  document.querySelectorAll('.alert-box').forEach(function(el) {
-    var t = el.textContent.trim();
-    if (t && recentAlerts.length < 10) recentAlerts.push(t);
-  });
-
-  // 어떤 데이터가 있는지 메타 정보
-  var dataAvailability = {
-    inventoryDays: allDates.filter(function(d) { return dailyData[d]?.inventory; }).length,
-    usageFileDays: usageDaysCount,
-    hasForecastUsage: forecastPeriodDays > 0,
-    forecastPeriod: fu.from && fu.to ? fu.from + ' ~ ' + fu.to + ' (' + forecastPeriodDays + '일)' : '',
-    usageSource: usageSource,
-    latestInventoryDate: allDates.filter(function(d) { return dailyData[d]?.inventory; }).slice(-1)[0] || '',
-  };
-
-  return {
-    dataType: appDataType,
-    activeTab: _aiGetCurrentTab(),
-    inventorySummary: inventorySummary,
-    drugMasterSummary: '항암제 ' + dm.length + '개, 일반약 ' + gdm.length + '개',
-    recentAlerts: recentAlerts,
-    filteredDrugList: _aiGetFilteredDrugList(),
-    newsContext: _aiGetFilteredNews(),
-    historicalDays: recentDates.length,
-    dataAvailability: dataAvailability,
-    forecastUsageSummary: forecastPeriodDays > 0 ? {
-      period: dataAvailability.forecastPeriod,
-      itemCount: fu.items.length,
-      topItems: fu.items.sort(function(a,b){ return b.total - a.total; }).slice(0, 20).map(function(i) {
-        return { code: i.code, name: (i.name||'').substring(0,40), total: i.total, dailyAvg: forecastUsageMap[i.code] || 0 };
-      })
-    } : null
-  };
-}
-
-function aiQuickMsg(msg) {
-  document.getElementById('aiInput').value = msg;
-  sendAiMessage();
-}
-
-async function sendAiMessage() {
-  var input = document.getElementById('aiInput');
-  var msg = input.value.trim();
-  if (!msg || _aiSending) return;
-  input.value = '';
-
-  _aiAppendBubble('user', msg);
-  // 이력에 사용자 메시지 추가
-  _aiChatHistory.push({ role: 'user', content: msg });
-
-  // 타이핑 인디케이터
-  var body = document.getElementById('aiChatBody');
-  var typing = document.createElement('div');
-  typing.className = 'ai-typing';
-  typing.id = 'aiTyping';
-  typing.textContent = 'AI가 생각하는 중...';
-  body.appendChild(typing);
-  body.scrollTop = body.scrollHeight;
-
-  _aiSending = true;
-  document.getElementById('aiSendBtn').disabled = true;
-
-  try {
-    var ctx = _aiBuildContext();
-    // 현재 메시지 제외한 이전 이력만 전송 (최대 20개 = 10교환)
-    var historyToSend = _aiChatHistory.slice(-21, -1);
-    var res = await fetch(API_BASE + '/ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'chat',
-        message: msg,
-        conversationHistory: historyToSend,
-        dataType: ctx.dataType,
-        activeTab: ctx.activeTab,
-        inventorySummary: ctx.inventorySummary,
-        drugMasterSummary: ctx.drugMasterSummary,
-        recentAlerts: ctx.recentAlerts,
-        filteredDrugList: ctx.filteredDrugList,
-        newsContext: ctx.newsContext,
-        historicalDays: ctx.historicalDays,
-        dataAvailability: ctx.dataAvailability,
-        forecastUsageSummary: ctx.forecastUsageSummary
-      })
-    });
-    var data = await res.json();
-    var typingEl = document.getElementById('aiTyping');
-    if (typingEl) typingEl.remove();
-
-    if (data.error) {
-      _aiAppendBubble('ai', 'Error: ' + data.error);
-      // 실패한 메시지는 이력에서 제거
-      _aiChatHistory.pop();
-    } else {
-      _aiAppendBubble('ai', data.reply);
-      // AI 응답도 이력에 추가
-      _aiChatHistory.push({ role: 'assistant', content: data.reply });
-      if (data.memorySaved) {
-        _aiAppendMemoryTag(data.memorySaved);
-      }
-    }
-  } catch (e) {
-    var typingEl = document.getElementById('aiTyping');
-    if (typingEl) typingEl.remove();
-    _aiAppendBubble('ai', '서버에 연결할 수 없습니다. 인터넷을 확인하세요.');
-    _aiChatHistory.pop();
-  } finally {
-    _aiSending = false;
-    document.getElementById('aiSendBtn').disabled = false;
-  }
-}
-
 window.addEventListener('DOMContentLoaded', function() {
   if (restoreSession()) {
     enterApp(); // 세션 있으면 바로 진입 (enterApp 내에서 init 호출)
@@ -7534,33 +7906,6 @@ window.addEventListener('DOMContentLoaded', function() {
   // 세션 없으면 로그인 화면이 이미 표시됨
 });
 </script>
-
-<!-- AI 챗봇 FAB + 패널 -->
-<button class="ai-fab" onclick="toggleAiChat()" title="AI 어시스턴트">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>
-</button>
-<div class="ai-chat-panel" id="aiChatPanel">
-  <div class="ai-chat-hdr">
-    <div>
-      <div class="ai-chat-hdr-title">AI 어시스턴트 <span id="aiModeBadge" class="ai-mode-badge">항암제 모드</span></div>
-      <div class="ai-chat-hdr-sub" id="aiChatSub">xAI Grok 4.1 Fast | 재고관리 전문</div>
-    </div>
-    <button onclick="clearAiChat()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;padding:2px 6px;" title="대화 초기화">초기화</button>
-    <button class="ai-chat-hdr-close" onclick="toggleAiChat()">X</button>
-  </div>
-  <div class="ai-chat-body" id="aiChatBody"></div>
-  <div class="ai-quick-bar">
-    <button class="ai-quick-btn" onclick="aiQuickMsg('오늘 재고 요약해줘')">오늘 요약</button>
-    <button class="ai-quick-btn" onclick="aiQuickMsg('부족 예상 약품 알려줘')">부족 예측</button>
-    <button class="ai-quick-btn" onclick="aiQuickMsg('현재 품절 가능성 뉴스는?')">품절 뉴스</button>
-    <button class="ai-quick-btn" onclick="aiQuickMsg('수요 예측 분석해줘')">수요 분석</button>
-    <button class="ai-quick-btn" onclick="aiQuickMsg('지금 주의해야 할 것은?')">주의사항</button>
-  </div>
-  <div class="ai-input-bar">
-    <input type="text" id="aiInput" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter'&&!event.isComposing)sendAiMessage()">
-    <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
-  </div>
-</div>
 
 </body>
 </html>

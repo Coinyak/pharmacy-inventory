@@ -17,12 +17,3 @@ database_id = "585b0acc-7821-4e8b-ab7a-ac9ee8f99d1e"
 [[kv_namespaces]]
 binding = "NEWS_CACHE"
 id = "ba4027ed612d44339f49997fe40888e9"
-
-# Workers AI
-[ai]
-binding = "AI"
-
-# xAI API 키 (선택사항 - Workers AI 실패 시 폴백)
-# wrangler pages secret put XAI_API_KEY 로 설정
-# [vars]
-# XAI_API_KEY = "" # 실제 키는 secret으로 관리

@@ -44,9 +44,19 @@
 ```bash
 export PATH="/c/Program Files/nodejs:/c/Users/duih/AppData/Roaming/npm:$PATH"
 wrangler pages dev public          # 로컬 테스트
-wrangler pages deploy public       # 실제 배포
+# 실제 배포: 반드시 프로젝트 .env의 전용 API 토큰을 사용한다.
+# 브라우저 OAuth 로그인 계정으로 배포하지 않는다. 현재 사이트 소유 계정은
+# .env의 CLOUDFLARE_ACCOUNT_ID(e3bc64a317c394bd44bf3867e593e2cd)이다.
+set -a && source .env && set +a
+wrangler pages deploy public --project-name pharmacy-inventory --commit-dirty=true
 wrangler d1 execute pharmacy-db --file=schema.sql  # DB 초기화
 ```
+
+### 배포 메모 (필수)
+- 고정 운영 주소는 `https://pharmacy-inventory-4pv.pages.dev`이며 변경하거나 새 Pages 프로젝트를 만들지 않는다.
+- 기존 Pages 프로젝트는 `pharmacy-inventory`이고, `.env`의 전용 Cloudflare API 토큰으로만 접근한다.
+- `wrangler whoami`의 브라우저 OAuth 계정이나 Pages 목록이 다르게 보여도, 이를 근거로 프로젝트가 없다고 판단하지 않는다. 먼저 `.env` 토큰으로 `accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/pharmacy-inventory`를 확인한다.
+- API 토큰 값은 화면·로그·커밋에 절대 출력하거나 저장하지 않는다.
 
 ### API 엔드포인트
 - `GET /api/state?type=chemo|general` - 데이터 조회 (인증 불필요)
