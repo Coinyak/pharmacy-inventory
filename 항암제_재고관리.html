@@ -1069,6 +1069,25 @@ let appDataType = '';       // 'chemo' | 'general'
 let authToken = '';         // 관리자 인증 토큰
 const API_BASE = '/api';
 
+function isPortableLocalApp() {
+  try {
+    var h = String(location.hostname || '');
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+  } catch (e) {
+    return false;
+  }
+}
+function setupPortableLocalHint() {
+  if (!isPortableLocalApp()) return;
+  var sub = document.querySelector('#loginOverlay .subtitle');
+  if (!sub || document.getElementById('localFileHint')) return;
+  var p = document.createElement('p');
+  p.id = 'localFileHint';
+  p.className = 'subtitle';
+  p.textContent = '로컬 모드입니다. 데이터는 이 폴더의 local-data에 저장됩니다. 다른 컴퓨터로 쓰려면 폴더째 복사한 뒤 같은 명령으로 여세요. 서버 사이트는 그대로입니다.';
+  sub.insertAdjacentElement('afterend', p);
+}
+
 async function sha256(text) {
   const data = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest('SHA-256', data);
@@ -3054,6 +3073,20 @@ function updateSyncBadge(status, detail) {
     badge.textContent = '미동기화 - 클릭';
     badge.title = '동기화 실패: ' + (detail || '') + '\n클릭하면 강제 재동기화';
     infoText = '클라우드 미동기화 (' + (detail || '') + ') — 위 버튼을 눌러 재시도하세요.';
+  }
+  if (isPortableLocalApp()) {
+    if (status === 'syncing') {
+      badge.textContent = '로컬 저장 중...';
+      badge.title = '이 컴퓨터의 local-data 파일에 저장하는 중';
+      infoText = '이 컴퓨터 폴더에 저장 중...';
+    } else if (status === 'ok') {
+      badge.textContent = '로컬 저장됨 ' + (detail || '');
+      badge.title = '이 컴퓨터의 local-data 파일에 저장됨';
+      infoText = '로컬 파일에 저장됨: ' + (detail || '') + ' — local-data 폴더를 다른 컴퓨터로 복사하면 그대로 쓸 수 있습니다.';
+    } else if (status !== 'conflict') {
+      badge.textContent = '로컬 미저장 - 클릭';
+      infoText = '로컬 저장 실패 (' + (detail || '') + ') — 위 버튼을 눌러 재시도하세요.';
+    }
   }
   if (info) info.textContent = infoText;
 }
@@ -7338,6 +7371,7 @@ function escapeAttr(str) {
 }
 
 window.addEventListener('DOMContentLoaded', function() {
+  setupPortableLocalHint();
   if (restoreSession()) {
     enterApp(); // 세션 있으면 바로 진입 (enterApp 내에서 init 호출)
   }
